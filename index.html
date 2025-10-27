@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 محاكاة حسين سنتات (V36 - القروض الدولية)</title>
+    <style>
+        :root{--bg:#071029;--card:#0b1220;--accent:#06b6d4;--success:#4ade80;--danger:#ff6b6b;--muted:#9aa4b2;--warn:#f59e0b;--info:#6366f1;--radius:8px;}
+        body{font-family:system-ui,sans-serif;background:var(--bg);color:#e6eef6;margin:0;padding:15px;display:flex;flex-direction:column;gap:15px;}
+        .container{max-width:650px;margin:0 auto;width:100%;}
+        .card{background:var(--card);border-radius:var(--radius);padding:15px;box-shadow:0 4px 12px rgba(0,0,0,.3);margin-bottom:15px;}
+        button,input[type=text],input[type=number]{padding:8px 12px;border-radius:5px;font-weight:600;transition:background .2s;border:none;box-sizing:border-box;}
+        button{background:var(--accent);color:#021;cursor:pointer;}
+        .action-btn{background:var(--success);color:#021;}
+        .danger-btn{background:var(--danger);color:white;}
+        .warn-btn{background:var(--warn);color:#021;}
+        button:disabled{background:var(--muted);cursor:not-allowed;}
+        .hidden{display:none!important;}
+        .v-btn-group{display:flex;flex-direction:column;gap:10px;}
+        .h-group{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+        .h-input-group{display:flex;align-items:center;gap:5px;}
+        .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:15px;margin-bottom:15px;}
+        .stat-value{font-size:1.4em;font-weight:700;}
+        .stat-label{font-size:.75em;color:var(--muted);}
+        .loan-status{padding:10px;border:1px solid var(--danger);border-radius:var(--radius);margin-top:10px;}
+        .loan-consequence{border:2px solid var(--danger);background:#200000;}
+        .item-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,.1);}
+        #mailIcon{font-size:1.5em;cursor:pointer;position:relative;transition: color 0.3s;}
+        #mailIcon.unread {
+            color: var(--danger);
+        }
+        #bankMailIcon{font-size:1.5em;cursor:pointer;position:relative;transition: color 0.3s;} /* أيقونة البنك */
+        #bankMailIcon.unread {
+            color: var(--danger);
+        }
+        #mailCount{position:absolute;top:-5px;right:-10px;background:var(--danger);color:white;border-radius:50%;padding:2px 6px;font-size:.6em;line-height:1;}
+        #bankMailCount{position:absolute;top:-5px;right:-10px;background:var(--danger);color:white;border-radius:50%;padding:2px 6px;font-size:.6em;line-height:1;} /* عداد البنك */
+        .admin-panel{border-top:2px solid var(--danger);margin-top:20px;padding-top:10px;}
+        .morale-bar{height:8px;border-radius:4px;transition:width .5s;}
+        .morale-stat{background:rgba(99,102,241,.1);padding:10px;border-radius:var(--radius);}
+        #stat-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(0,0,0,.3);border-radius:var(--radius);margin-bottom:15px;}
+        .header-stat{text-align:center;font-size:.9em;}
+        .header-stat .value{font-weight:700;font-size:1.1em;}
+        /* التعديل الجديد: خلفية البريد عند الفتح */
+        #mailPanel.red-bg {
+            background: #200000; /* أحمر داكن */
+            border: 1px solid var(--danger);
+        }
+        #bankMailPanel.red-bg {
+            background: #200000; /* أحمر داكن */
+            border: 1px solid var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="color:var(--accent);text-align:center;">Mini Centat V36 (تحدي القروض الدولية)</h2>
+        <div id="stat-header">
+            <div class="header-stat" style="color:var(--success);"><div id="h_money" class="value">0$</div><div class="label">الرصيد المحلي</div></div>
+            <div class="header-stat" style="color:var(--info);"><div id="h_bank" class="value">0$</div><div class="label">البنك المركزي</div></div>
+            <div class="header-stat" style="color:var(--warn);"><div id="h_points" class="value">0P</div><div class="label">نقاطي</div></div>
+        </div>
+        <div id="view-home" class="card">
+            <h3>شاشة الدخول</h3>
+            <div class="v-btn-group">
+                <button onclick="changeView('view-game')">ابدأ اللعب (وضع العب)</button>
+                <button onclick="changeView('view-bank')">البنك المركزي 🏦</button> 
+                <button onclick="changeView('view-black-market')" style="background:var(--danger); color:white;">السوق السوداء 💣</button>
+                <button onclick="changeView('view-farm')">المزرعة 🌿</button> 
+                <button onclick="changeView('view-car')">معرض السيارات</button>
+                <button onclick="changeView('view-estate')">إدارة العقارات</button>
+                <button onclick="changeView('view-phones')">سوق الهواتف 📲</button>
+                <button onclick="changeView('view-achievements')">الإنجازات 🏆</button>
+            </div>
+            <div class="h-group admin-panel">
+                <h4 style="margin:0;">وضع الأدمن</h4>
+                <div class="h-input-group">
+                    <input type="text" id="adminPass" placeholder="كلمة السر" style="width:100px;">
+                    <button id="adminBtn" class="danger-btn" onclick="toggleAdmin()">دخول</button>
+                </div>
+            </div>
+            <div id="adminControls" class="v-btn-group hidden" style="margin-top:10px;">
+                 <input type="number" id="cheatAmount" value="1000" style="width:100px;">
+                 <button class="action-btn" onclick="applyCheat('money')">إضافة رصيد</button>
+                 <button class="action-btn" onclick="applyCheat('points')">إضافة نقاط</button>
+                 <button class="danger-btn" onclick="S.breakTimer=0; alert('تم إلغاء الاستراحة.'); uUI();">إلغاء استراحة العمال فوراً</button>
+            </div>
+        </div>
+        <div id="view-game" class="card hidden">
+            <div class="h-group">
+                <h3>إدارة المصنع</h3>
+                <span id="mailIcon" onclick="readMail()">📩<span id="mailCount" class="hidden">0</span></span>
+            </div>
+            <div id="mailPanel" class="card hidden">
+                <h3 style="margin-top:0;">البريد الوارد 📮</h3>
+                <div id="mailList"></div>
+                <button onclick="readAllMail()" class="action-btn" style="width:100%; margin-top:10px;">قرأت الكل</button>
+            </div>
+            <div class="stat-grid">
+                <div class="stat"><div id="debt" class="stat-value" style="color:var(--danger);">0</div><div class="stat-label">إجمالي الدين</div></div>
+                <div class="stat morale-stat" style="grid-column:span 2;"><div id="moralePercent" class="stat-value">100%</div><div class="stat-label">رضا العمال</div><div class="morale-bar-container" style="margin-top:5px;"><div id="moraleBar" class="morale-bar" style="width:100%;"></div></div></div>
+                <div class="stat"><div id="power" class="stat-value">0</div><div class="stat-label">الطاقة المتبقية (MW)</div></div>
+                <div class="stat" style="background:rgba(99,102,241,.1);"><div id="workers_extra" class="stat-value">0</div><div class="stat-label">عمال فائض</div></div>
+                <div class="stat" style="background:rgba(74,222,128,.1);"><div id="machines_running" class="stat-value">0</div><div class="stat-label">آلات عاملة</div></div>
+            </div>
+            <p id="statusMsg" style="font-weight:700;text-align:center;color:var(--warn);"></p>
+            <div class="card" style="margin-bottom:15px;">
+                <h3>🛠️ المصنع والعمال</h3>
+                <div class="h-group">
+                    <button id="collectBtn" class="action-btn">جمع يدوي (+1 نقطة)</button> 
+                    <button id="convertBtn" class="warn-btn">تحويل النقاط (100P = 1$)</button>
+                </div>
+                <div class="h-group" style="border-top:1px dashed var(--muted);padding-top:10px;">
+                    <h4>ترقية المعمل (مستوى <span id="factoryLvl">1</span>)</h4>
+                    <button id="upgradeFactoryBtn"></button>
+                </div>
+                <div class="h-group"><h4>توظيف عامل (20 رصيد)</h4> <button id="buyWorkerBtn">توظيف</button></div>
+                <div class="h-group"><h4>صرف طعام العمال (100 رصيد)</h4> <button id="feedWorkerBtn" class="action-btn">صرف</button></div>
+                <h4>شراء آلات (تتطلب عامل وطاقة)</h4>
+                <div id="machineList"></div>
+            </div>
+            <div id="loanPanel" class="card" style="margin-bottom:15px;">
+                <h3>🏦 نظام القروض</h3>
+                <div id="smallLoans">
+                    <h4>قروض المصنع السريعة (فائدة دورية)</h4>
+                    <div class="h-group">
+                        <button onclick="takeSmallLoan(500, .5)" id="loan500Btn">قرض 500$ (+50% فائدة)</button>
+                        <button onclick="takeSmallLoan(250, .25)" id="loan250Btn">قرض 250$ (+25% فائدة)</button>
+                    </div>
+                    <div id="smallLoanStatus" class="h-group hidden" style="margin-top:10px;">
+                        <p style="color:var(--danger);font-weight:700;margin:0;">دين المصنع: <span id="currentSmallDebt">0</span> $</p>
+                        <button onclick="repaySmallLoan()" class="action-btn" id="repaySmallLoanBtn">سداد الدين بالكامل</button>
+                    </div>
+                </div>
+                <div id="bigLoanForm" class="card" style="margin-bottom:0;">
+                    <h4>قرض السوق الكبير (مؤقت سداد)</h4>
+                    <p style="font-size:.8em;color:var(--muted);">القرض بين 10,000$ و 2,000,000$. الفائدة الأساسية: 100%.</p>
+                    <div class="h-group">
+                        <label for="bigLoanAmount" style="font-weight:700;">المبلغ:</label>
+                        <input type="number" id="bigLoanAmount" value="10000" min="10000" max="2000000" style="width:100px;">
+                        <span>رصيد ($)</span>
+                    </div>
+                    <div class="h-group" style="margin-top:5px;">
+                        <label for="extraTime" style="font-weight:700;">تمديد الوقت:</label>
+                        <input type="number" id="extraTime" value="0" min="0" max="30" style="width:50px;">
+                        <span>دقيقة إضافية (+1% فائدة/دقيقة)</span>
+                    </div>
+                    <button onclick="takeBigLoan()" class="danger-btn" style="width:100%;margin-top:10px;">اخذ القرض الكبير</button>
+                </div>
+                <div id="bigLoanStatus" class="loan-status hidden">
+                    <h4 style="color:var(--danger);margin-top:0;">وضع القرض الكبير النشط (سداد بالدفعات)</h4>
+                    <p>المبلغ المتبقي: <span id="currentLoanAmount" style="color:var(--danger);">0</span> $</p>
+                    <p>إجمالي السداد المتبقي: <span id="totalRepayAmount" style="color:var(--danger);">0</span> $ (فائدة: <span id="currentInterestRate">0</span>%)</p>
+                    <p>الوقت المتبقي: <span id="bigLoanTimer" style="color:var(--warn);">--</span></p>
+                    <div class="h-group" style="border-top:1px dashed var(--muted);padding-top:10px;"><span style="font-weight:700;">الحد الأدنى للدفعة:</span><span id="minPaymentAmount" style="color:var(--info);">0</span> $ (10% من المتبقي)</div>
+                    <div class="h-group">
+                        <input type="number" id="repayAmount" value="0" min="0" style="width:100px;">
+                        <button onclick="repayBigLoan(.10)" class="action-btn">دفع 10% دفعة</button>
+                        <button onclick="repayBigLoan(0)" class="action-btn">سداد المبلغ المحدد</button>
+                    </div>
+                </div>
+                <div id="loanConsequence" class="card loan-consequence hidden">
+                    <h4 style="color:var(--danger);margin-top:0;">🔴 انتهى وقت السداد!</h4>
+                    <p style="margin-bottom:15px;">يجب اتخاذ قرار فوري لتجنب العواقب.</p>
+                    <div class="v-btn-group">
+                        <button class="warn-btn" onclick="applyPenalty(1)">غرامة 10000$ + زيادة فائدة 10% (تمديد)</button>
+                        <button class="danger-btn" onclick="applyPenalty(2)">مصادرة جميع الممتلكات والأموال (إعادة تعيين)</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:15px;">
+                <h3>🔋 محطات الطاقة (⚠️ <span id="powerFailureStatus" style="color:var(--danger);">لا توجد أعطال</span>)</h3>
+                <div id="powerList"></div>
+            </div>
+            <div class="card" style="margin-bottom:15px;">
+                <h3>💰 بنك النقاط (العقارات)</h3>
+                <div class="h-group">
+                    <p style="margin:0;font-weight:700;">نقاط الربح المُجمعة: <span id="bankP" style="color:var(--success);">0</span> نقطة</p>
+                    <button id="collectBankPBtn" class="action-btn">جمع الكل</button>
+                </div>
+            </div>
+            <button onclick="changeView('view-home')">العودة للقائمة</button>
+        </div>
+        <div id="view-estate" class="card hidden">
+            <h3>إدارة العقارات</h3>
+            <p>نقاط الربح من العقارات تذهب إلى بنك النقاط.</p>
+            <div id="estateList"></div>
+            <button onclick="changeView('view-home')">العودة للقائمة</button>
+        </div>
+        <div id="view-car" class="card hidden">
+            <h3>معرض السيارات / العروض</h3>
+            <p style="color:var(--danger);font-weight:700;">⚠️ تحذير: إذا رفضت العرض الخامس، ستتم مصادرة السيارة.</p>
+            <div id="carList"></div>
+            <button onclick="changeView('view-home')">العودة للقائمة</button>
+        </div>
+        <div id="view-achievements" class="card hidden">
+            <h3>الإنجازات 🏆</h3>
+            <p>أكمل هذه التحديات للحصول على مكافآت نقدية فورية.</p>
+            <div id="achievementsList"></div>
+            <button onclick="changeView('view-home')">العودة للقائمة</button>
+        </div>
+        <div id="view-bank" class="card hidden">
+            <div class="h-group">
+                <h3>البنك المركزي 🏦</h3>
+                <span id="bankMailIcon" onclick="readBankMail()">✉️<span id="bankMailCount" class="hidden">0</span></span>
+            </div>
+            <p style="color:var(--info);">مكان آمن لإيداع أموالك وحمايتها من مخاطر القروض الكبيرة.</p>
+
+            <div id="bankMailPanel" class="card hidden">
+                <h4 style="margin-top:0;">طلبات القروض الدولية 🌎</h4>
+                <p style="font-size:.8em;color:var(--warn);margin-bottom:10px;">
+                    مؤشر الثقة الدولية: <span id="internationalTrustDisplay" style="font-weight:700;color:var(--info);">100%</span>
+                    <button id="restoreTrustBtn" onclick="restoreInternationalTrust()" style="margin-right:10px;" disabled>دفع غرامة (10k$)</button>
+                </p>
+                <div id="internationalLoanList"></div>
+                <button onclick="readAllBankMail()" class="action-btn" style="width:100%; margin-top:10px;">إخفاء الكل</button>
+            </div>
+            <div class="stat-grid">
+                <div class="stat"><div id="bankBalance" class="stat-value" style="color:var(--info);">0</div><div class="stat-label">رصيدك في البنك ($)</div></div>
+                <div class="stat" style="background:rgba(74,222,128,.1);"><div id="carProfit" class="stat-value" style="color:var(--success);">0</div><div class="stat-label">إجمالي أرباح السيارات</div></div>
+                <div class="stat" style="background:rgba(245,158,11,.1);"><div id="bankFee" class="stat-value" style="color:var(--danger);">0.1%</div><div class="stat-label">رسوم السحب</div></div>
+            </div>
+             <div class="h-group" style="border-top:1px dashed var(--muted);padding-top:10px;">
+                <p style="font-weight:700;color:var(--success);margin:0;">أرباح السيارات: <span id="carProfitDisplay" style="font-size:1.1em;">0$</span></p>
+                <button class="action-btn" onclick="resetCarProfit()">إعادة تعيين عداد الأرباح</button>
+            </div>
+            <div class="card" style="margin-top:15px;margin-bottom:15px;">
+                <h4>إيداع الأموال</h4>
+                <div class="h-input-group">
+                    <input type="number" id="depositAmount" value="100" min="1" style="width:150px;">
+                    <button class="action-btn" onclick="transferMoney('deposit')">إيداع</button>
+                    <button class="action-btn" onclick="transferMoney('deposit',!0)">إيداع الكل</button>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:15px;">
+                <h4>سحب الأموال (رسوم: 0.1%)</h4>
+                <div class="h-input-group">
+                    <input type="number" id="withdrawAmount" value="100" min="1" style="width:150px;">
+                    <button class="danger-btn" onclick="transferMoney('withdraw')">سحب</button>
+                    <button class="danger-btn" onclick="transferMoney('withdraw',!0)">سحب الكل</button>
+                </div>
+            </div>
+
+            <div id="activeInternationalLoans" class="card hidden">
+                <h4>القروض الدولية النشطة (لك)</h4>
+                <div id="activeInternationalLoanList"></div>
+            </div>
+
+            <button onclick="changeView('view-home')">العودة للقائمة</button>
+        </div>
+        <div id="view-farm" class="card hidden">
+            <h3>المزرعة 🌿</h3>
+            <p>ازرع البذور وانتظر حتى الحصاد لتحصل على أرباح تذهب مباشرة إلى البنك المركزي.</p>
+            <div class="h-group">
+                <h4 style="color:var(--success);margin:0;">سعر البذرة الواحدة: 100$</h4>
+                <h4 style="color:var(--warn);margin:0;">ربح الحصاد: 0.7%</h4>
+            </div>
+            <div class="card" id="plantingSection" style="background:rgba(74,222,128,.05);">
+                <h4>شراء البذور والزراعة</h4>
+                <div class="h-input-group" style="margin-bottom:10px;">
+                    <input type="number" id="seedAmount" value="1" min="1" style="width:100px;">
+                    <button class="action-btn" onclick="plantSeeds(parseInt($('seedAmount').value))">شراء الكمية المحددة</button>
+                </div>
+                <div class="h-input-group" style="justify-content:space-between;">
+                    <button class="action-btn" onclick="plantSeeds(10)">شراء 10 بذور (1k$)</button>
+                    <button class="action-btn" onclick="plantSeeds(100)">شراء 100 بذرة (10k$)</button>
+                    <button class="action-btn" onclick="plantSeeds(1000)">شراء 1000 بذرة (100k$)</button>
+                </div>
+                <div class="h-group" style="margin-top:15px; border-top:1px dashed var(--muted); padding-top:10px;">
+                    <p style="font-weight:700;color:var(--success);margin:0;">حصاد كل الجاهز</p>
+                    <button class="action-btn" onclick="harvestAllReady()">حصاد الكل</button>
+                </div>
+            </div>
+            <div id="farmList" style="margin-top:15px;"></div>
+            <button onclick="changeView('view-home')">العودة للقائمة</button>
+        </div>
+        
+        <div id="view-phones" class="card hidden">
+            <h3>سوق الهواتف 📲</h3>
+            <p>قم بشراء المكونات، تصنيع الأجهزة، وتلبية طلبات السوق المتقلبة لتحقيق أرباح ضخمة.</p>
+            
+            <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));">
+                <div class="stat" style="background:rgba(239,68,68,.1);"><div id="phone_parts" class="stat-value">0</div><div class="stat-label">قطع (750$/ق)</div></div>
+                <div class="stat" style="background:rgba(251,191,36,.1);"><div id="phone_batteries" class="stat-value">0</div><div class="stat-label">بطاريات (250$/ب)</div></div>
+                <div class="stat" style="background:rgba(99,102,241,.1);"><div id="phone_stock" class="stat-value">0</div><div class="stat-label">هواتف جاهزة</div></div>
+                <div class="stat" style="background:rgba(74,222,128,.1);"><div id="phone_machine_count" class="stat-value">0</div><div class="stat-label">آلات تصنيع</div></div>
+            </div>
+
+            <div class="card" style="margin-top:15px;">
+                <h3>آلات التصنيع (آلة واحدة: <span id="phoneMachineCostDisplay">5000$</span>)</h3>
+                <div class="h-group">
+                    <p>كل آلة تصنع هاتف كل 30 ثانية.</p>
+                    <button id="buyPhoneMachineBtn" onclick="buyPhoneMachine()" disabled>شراء آلة</button>
+                </div>
+            </div>
+             <div class="card" style="margin-top:15px;">
+                <h3>سعة التخزين والإنتاج 💾</h3>
+                <div class="h-group">
+                    <p style="margin:0;">السعة الحالية: <span id="phone_storage_capacity" style="font-weight:700;">1</span> هاتف.</p>
+                    <button id="buyStorageBtn" onclick="buyPhoneStorage()">شراء مساحة هاتف واحد (500$)</button>
+                </div>
+                <p style="font-size:.8em;color:var(--danger);margin-top:5px;">⚠️ لا يمكن بدء التصنيع إذا تجاوز المخزون الحالي السعة المتاحة.</p>
+            </div>
+
+
+            <div class="card" id="supplySection">
+                <h3>شراء المكونات (1000$ للتجميعة)</h3>
+                <div class="h-input-group" style="margin-bottom:10px;">
+                    <label for="componentAmount" style="font-weight:700;">عدد التجميعات:</label>
+                    <input type="number" id="componentAmount" value="1" min="1" style="width:70px;">
+                    <button class="action-btn" onclick="orderComponents()">طلب المكونات</button>
+                </div>
+                <div id="shipmentStatus" style="font-size:.8em;color:var(--warn);">لا توجد شحنات قادمة.</div>
+            </div>
+            
+            <div class="card" id="productionSection">
+                <h3>خط الإنتاج</h3>
+                <div id="productionList"></div>
+                <div class="h-group" style="margin-top:10px;">
+                    <p style="margin:0;">تحتاج (1 قطعة + 1 بطارية) لإنتاج هاتف.</p>
+                    <button id="startProductionBtn" onclick="startPhoneProduction()" disabled>بدء التصنيع</button>
+                </div>
+                 <p style="font-size:.8em;color:var(--danger);margin-top:5px;">تكلفة صيانة المخزون: 25$ لكل هاتف جاهز كل دقيقة.</p>
+            </div>
+            
+            <div class="card" id="salesSection">
+                <h3>سوق الطلبات المتقلبة</h3>
+                <div id="orderStatus"></div>
+                <div class="h-group" style="margin-top:10px;">
+                    <button id="sellPhonesBtn" onclick="sellPhones()" disabled>تنفيذ الطلب و البيع</button>
+                </div>
+            </div>
+
+            <button onclick="changeView('view-home')" style="margin-top:15px;">العودة للقائمة</button>
+        </div>
+
+        <div id="view-black-market" class="card hidden">
+            <h3 style="color:var(--danger);">السوق السوداء والتكنولوجيا العسكرية 💣</h3>
+            <p>سلسلة إنتاج عالية المخاطر/المكافأة. جميع التعاملات المالية تتم عبر البنك المركزي.</p>
+            
+            <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));">
+                <div class="stat" style="background:rgba(255,107,107,.1);"><div id="bm_tension" class="stat-value">0.50</div><div class="stat-label">مؤشر التوتر (يحدد السعر)</div></div>
+                <div class="stat" style="background:rgba(255,191,36,.1);"><div id="bm_exposure" class="stat-value">0%</div><div class="stat-label">مؤشر التعرض للخطر</div></div>
+                <div class="stat" style="background:rgba(99,102,241,.1);"><div id="bm_price" class="stat-value">0$</div><div class="stat-label">سعر البيع الحالي/وحدة</div></div>
+                <div class="stat" style="background:rgba(74,222,128,.1);"><div id="bm_units" class="stat-value">0</div><div class="stat-label">مخزون السلاح الجاهز</div></div>
+            </div>
+
+            <div class="card" style="margin-top:15px; background: #200000;">
+                <h3>المرحلة 1: شراء التكنولوجيا (من البنك المركزي)</h3>
+                <div class="h-group">
+                    <p style="margin:0;">المخططات السرية: <span id="bm_blueprint_status">❌ لا يوجد</span></p>
+                    <button id="buyBlueprintsBtn" onclick="buyBlueprints()">شراء (500k$)</button>
+                </div>
+                <div class="h-group">
+                    <p style="margin:0;">ترخيص التصدير: <span id="bm_license_status">❌ لا يوجد</span></p>
+                    <button id="buyLicenseBtn" onclick="buyExportLicense()">شراء (50k$)</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:15px;">
+                <h3>المرحلة 2: الإنتاج والتجميع (استهلاك P)</h3>
+                <div class="h-group">
+                    <p style="margin:0;">آلات التجميع: <span id="bm_lines_count">0</span></p>
+                    <button id="buyAssemblyLineBtn" onclick="buyAssemblyLine()">شراء خط تجميع (200k$)</button>
+                </div>
+                 <div class="h-group" style="margin-top:10px; border-top:1px dashed var(--muted); padding-top:10px;">
+                    <p style="margin:0; font-weight:700;">تكلفة التصنيع: 20,000P لكل وحدة.</p>
+                    <button id="startWeaponProductionBtn" onclick="startWeaponProduction()">بدء الإنتاج</button>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top:15px;">
+                <h3>المرحلة 3: التصدير والمضاربة (ربح للبنك المركزي)</h3>
+                <div class="h-group">
+                    <p style="margin:0; font-weight:700;">سعر الوحدة: <span id="bm_current_price_export" style="color:var(--info);">0$</span></p>
+                    <button id="exportWeaponsBtn" onclick="exportWeapons()">تصدير مخزون الأسلحة بالكامل</button>
+                </div>
+            </div>
+
+            <button onclick="changeView('view-home')" style="margin-top:15px;">العودة للقائمة</button>
+        </div>
+        </div> 
+    <script>
+        let S = {
+            m: 1e3, p: 0, w: 0, machines: [], power: 0, debt: 0, loanA: 0,
+            bigLoan: { amount: 0, initial: 0, totalRepay: 0, timer: 0, interest: 0, active: !1, initialTotalRepay: 0, initialTimer: 0 },
+            cOwned: [], eOwned: [], bankP: 0, offersCount: 0, factoryLvl: 1, upgradeCost: 2500, breakTimer: 0, currentView: 'view-home', admin: !1, adminPass: '1234', morale: 100, isStrike: !1, flashSale: { active: !1, timer: 0, nextMinute: 0 }, achievements: {},
+            bank: { balance: 0 }, farm: [], carProfit: 0,
+            mailMessages: [], 
+            phones: {
+                machine: { count: 0, cost: 5000 }, parts: 0, batteries: 0, cost: 1000, production: [], stock: 0, storageCapacity: 1, storageCost: 500, maintenanceCost: 25, currentOrder: null, orderTimer: 0, nextOrderCheck: 60,
+            },
+            shipments: [], 
+            blackMarket: {
+                hasBlueprints: false, isFlawedBlueprint: false, assemblyLines: 0, weaponUnits: 0, exportLicense: false, tensionIndex: 0.5, exposure: 0,
+                blueprintCost: 500000, assemblyCost: 200000, licenseCost: 50000, pCostPerUnit: 20000, baseExportPrice: 500000
+            },
+            // 👑 نظام القروض الدولية الجديد
+            internationalLoans: {
+                trustIndex: 100, // مؤشر الثقة (10% خطر المصادرة)
+                trustPenaltyCost: 10000,
+                activeRequests: [], // طلبات القروض التي تحتاج للقرار
+                myActiveLoans: [] // القروض التي قدمتها وما زالت قيد السداد
+            },
+            bankMailCount: 0, // عداد رسائل بريد البنك
+        };
+        
+        const W_COST=20,FOOD_COST=100,MORALE_DROP_PER_MIN=5,BASE_P_TO_M=100,FLASH_SALE_P_TO_M=10,FLASH_SALE_DURATION=5,FLASH_SALE_MAX_WAIT=15,FLASH_SALE_MIN_WAIT=1,BANK_WITHDRAWAL_FEE=.001,SEED_COST=100,FARM_GROWTH_MIN=600,FARM_GROWTH_MAX=900,FARM_PROFIT_RATE=.007;
+        const CAR_OFFER_MIN_WAIT=300, CAR_OFFER_MAX_WAIT=800; 
+        const MACHINES=[{id:1,name:"إنتاج خفيف",cost:100,pPerMin:500,powerConsume:1,isPower:!1},{id:2,name:"إنتاج متوسط",cost:500,pPerMin:1e3,powerConsume:3,isPower:!1},{id:101,name:"مولد أساسي",cost:150,powerPerMin:10,isPower:!0,failureTime:0}];
+        
+        // 👑 تحديث السيارات (إضافة 5 جديدة)
+        const CARS=[
+            {id:1,name:"سايبا",price:100},{id:2,name:"ستوتة",price:150},{id:3,name:"جيلي عادية",price:200},{id:4,name:"كيا ريو",price:300},{id:5,name:"هيونداي إلنترا",price:400},{id:6,name:"تويوتا كامري",price:550},{id:7,name:"فورد موستانج قديمة",price:700},{id:8,name:"مرسيدس E-Class",price:850},{id:9,name:"بي إم دبليو X5",price:900},{id:10,name:"دودج تشالنجر",price:1e3},
+            {id:11,name:"جيب جراند شيروكي",price:2500},{id:12,name:"بورش كايين",price:3500},{id:13,name:"رنج روفر فيلار",price:5000},{id:14,name:"لامبورجيني أوروس",price:7500},{id:15,name:"فيراري روما",price:1e4},
+            // السيارات الجديدة
+            {id:16,name:"مازيراتي ليفانتي",price:15000},{id:17,name:"بنتلي بنتايغا",price:20000},{id:18,name:"أستون مارتن DB11",price:30000},{id:19,name:"ماكلارين 720S",price:40000},{id:20,name:"بوغاتي فيرون",price:50000}
+        ];
+        
+        // 👑 تحديث العقارات (إضافة فندق ومنتجع)
+        const ESTATES=[
+            {id:1,name:"بيت شعبي صغير",price:100,rentPerMin:100},{id:2,name:"بيت عادي",price:250,rentPerMin:300},{id:3,name:"شقة استثمارية",price:500,rentPerMin:650},{id:4,name:"فيلا صغيرة",price:750,rentPerMin:1050},{id:5,name:"عمارة تجارية",price:1e3,rentPerMin:1500},
+            // العقارات الجديدة
+            {id:6,name:"فندق سياحي فاخر",price:100000,rentPerMin:150000},
+            {id:7,name:"منتجع فاخر (850k P)",price:500000,rentPerMin:850000}
+        ];
+        
+        const ACHIEVEMENTS=[{id:'startRich',name:'بداية الثراء (10K رصيد)',check:()=>S.m>=1e4,reward:500,achieved:!1},{id:'firstUpgrade',name:'الترقية الأولى (مستوى 2)',check:()=>S.factoryLvl>=2,reward:1e3,achieved:!1},{id:'carCollector',name:'جامع السيارات (3 سيارات)',check:()=>S.cOwned.length>=3,reward:2e3,achieved:!1},{id:'estateOwner',name:'إمبراطور العقارات (5 عقارات)',check:()=>S.eOwned.length>=5,reward:2500,achieved:!1},{id:'millionaire',name:'صاحب الملايين (1M رصيد)',check:()=>S.m>=1e6,reward:1e4,achieved:!1},{id:'powerMaster',name:'سيد الطاقة (5 مولدات)',check:()=>S.machines.filter(m=>m.isPower).length>=5,reward:1500,achieved:!1},{id:'soldPoints',name:'تاجر سريع (50K نقطة)',check:()=>S.p>=5e4,reward:2e3,achieved:!1}];
+        ACHIEVEMENTS.forEach(ach=>S.achievements[ach.id]=!1);
+
+        // 👑 أسماء الدول للقروض الدولية
+        const COUNTRIES = [
+            'الجمهورية الفيدرالية', 'مملكة الجنوب', 'دولة الزمرد', 'الأرض الشمالية', 'إمارة الساحل',
+            'الاتحاد الموحد', 'جمهورية الشفق', 'المقاطعة الحرة', 'بلاد الأمل', 'إقليم النجوم',
+            'المدينة الجديدة', 'وادي الشمس', 'شبه الجزيرة المستقلة', 'الجزر البعيدة', 'المركز المالي'
+        ];
+
+        const $ = id => document.getElementById(id);
+        
+        function formatNumber(num,fixed=2){num=Math.round(num*100)/100;if(num>=1e9)return(num/1e9).toFixed(1).replace(/\.0$/,'')+'B';if(num>=1e6)return(num/1e6).toFixed(1).replace(/\.0$/,'')+'M';if(num>=1e3)return(num/1e3).toFixed(1).replace(/\.0$/,'')+'k';return num.toFixed(fixed).replace(/\.00$/,'');}
+        function formatTime(totalSeconds){const minutes=Math.floor(totalSeconds/60);const seconds=totalSeconds%60;return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;}
+        function generateNextOfferTime(){return Math.floor(Math.random()*(CAR_OFFER_MAX_WAIT-CAR_OFFER_MIN_WAIT+1))+CAR_OFFER_MIN_WAIT;} 
+        function generateOfferValue(basePrice){const factor=.01+Math.random()*1.79;return Math.max(1,Math.floor(basePrice*factor));}
+        
+        // --- وظائف البريد المصنع العادية ---
+        window.readMail = () => {
+            const mailPanel = $('mailPanel');
+            const isHidden = mailPanel.classList.toggle('hidden');
+            if (!isHidden) {
+                mailPanel.classList.add('red-bg'); 
+            } else {
+                mailPanel.classList.remove('red-bg'); 
+            }
+            uMailList(); 
+            uUI();
+        };
+
+        window.readAllMail = () => {
+            S.mailMessages = []; 
+            S.offersCount = 0; 
+            $('mailPanel').classList.remove('red-bg'); 
+            uMailList();
+            uUI();
+            $('mailPanel').classList.add('hidden'); 
+        };
+
+        function addMailMessage(type, message) {
+            const allowedTypes = ['عرض سيارة', 'شحنة هاتف (وصول)', 'حصاد مزرعة (جاهز)', 'طلب هاتف (جديد)', 'مصادرة سيارة', 'اقتصاد كلي'];
+            
+            if (allowedTypes.includes(type)) {
+                S.mailMessages.unshift({ type: type, message: message, timestamp: Date.now() });
+                S.offersCount = S.mailMessages.length;
+            }
+        }
+
+        function uMailList() {
+            const list = $('mailList');
+            list.innerHTML = '';
+            if (S.mailMessages.length === 0) {
+                list.insertAdjacentHTML('beforeend', `<p style="text-align:center;color:var(--muted);">لا توجد رسائل جديدة.</p>`);
+                return;
+            }
+            S.mailMessages.forEach(mail => {
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="item-row" style="background:rgba(255,255,255,.05); border-radius:5px; margin-bottom:5px;">
+                        <span style="font-weight:700; color:var(--info);">[${mail.type}]</span>
+                        <span style="flex-grow:1; margin-right:10px;">${mail.message}</span>
+                    </div>
+                `);
+            });
+        }
+        // --- نهاية وظائف البريد المصنع العادية ---
+
+        // 👑 وظائف بريد البنك والقروض الدولية الجديدة ---
+        window.readBankMail = () => {
+            const mailPanel = $('bankMailPanel');
+            const isHidden = mailPanel.classList.toggle('hidden');
+            if (!isHidden) {
+                mailPanel.classList.add('red-bg'); 
+            } else {
+                mailPanel.classList.remove('red-bg'); 
+            }
+            uBankMailUI(); 
+            uUI();
+        };
+
+        window.readAllBankMail = () => {
+            $('bankMailPanel').classList.remove('red-bg'); 
+            uUI();
+            $('bankMailPanel').classList.add('hidden'); 
+        };
+
+        function addBankMailMessage(loanOffer) {
+            S.internationalLoans.activeRequests.push(loanOffer);
+            S.bankMailCount = S.internationalLoans.activeRequests.length;
+        }
+
+        function uBankMailUI() {
+            const list = $('internationalLoanList');
+            list.innerHTML = '';
+            const activeRequests = S.internationalLoans.activeRequests;
+
+            if ($('internationalTrustDisplay')) $('internationalTrustDisplay').textContent = `${S.internationalLoans.trustIndex.toFixed(0)}%`;
+            if ($('restoreTrustBtn')) $('restoreTrustBtn').disabled = S.internationalLoans.trustIndex >= 100 || S.m < S.internationalLoans.trustPenaltyCost;
+            if (S.internationalLoans.trustIndex < 25) $('internationalTrustDisplay').style.color = 'var(--danger)';
+            else if (S.internationalLoans.trustIndex < 75) $('internationalTrustDisplay').style.color = 'var(--warn)';
+            else $('internationalTrustDisplay').style.color = 'var(--success)';
+
+            if (activeRequests.length === 0) {
+                list.insertAdjacentHTML('beforeend', `<p style="text-align:center;color:var(--muted);">لا توجد طلبات قروض دولية حالياً.</p>`);
+                return;
+            }
+
+            activeRequests.forEach((loan, index) => {
+                const totalRepay = loan.amount * (1 + loan.interestRate);
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="item-row" style="background:rgba(255,255,255,.05); border-radius:5px; margin-bottom:5px;">
+                        <div style="flex-grow:1;">
+                            <span style="font-weight:700; color:var(--info);">[${loan.country}] يطلب: ${formatNumber(loan.amount)}$</span>
+                            <p style="font-size:.8em;margin:0;color:var(--muted);">الفائدة: ${(loan.interestRate * 100).toFixed(1)}% | السداد: ${loan.timer / 60} دقيقة.</p>
+                            <p style="font-size:.8em;margin:0;color:var(--success);">إجمالي العائد: ${formatNumber(totalRepay)}$</p>
+                        </div>
+                        <div class="h-input-group">
+                            <button class="action-btn" onclick="respondToInternationalLoan(${index}, true)">قبول</button>
+                            <button class="danger-btn" onclick="respondToInternationalLoan(${index}, false)">رفض</button>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+        
+        window.respondToInternationalLoan = (index, accepted) => {
+            const loan = S.internationalLoans.activeRequests[index];
+            if (!loan) return;
+
+            if (accepted) {
+                if (S.bank.balance < loan.amount) {
+                    alert('رصيدك في البنك المركزي غير كافٍ لتقديم هذا القرض.');
+                    return;
+                }
+                S.bank.balance -= loan.amount;
+                const totalRepay = loan.amount * (1 + loan.interestRate);
+                S.internationalLoans.myActiveLoans.push({
+                    country: loan.country,
+                    amount: loan.amount,
+                    totalRepay: totalRepay,
+                    timer: loan.timer,
+                    id: Date.now()
+                });
+                alert(`✅ تم قبول القرض! تم خصم ${formatNumber(loan.amount)}$ من البنك المركزي. السداد المتوقع: ${formatNumber(totalRepay)}$`);
+            } else {
+                // عقوبة الرفض
+                S.internationalLoans.trustIndex = Math.max(10, S.internationalLoans.trustIndex - 5);
+                alert(`❌ تم رفض القرض. انخفض مؤشر الثقة الدولية إلى ${S.internationalLoans.trustIndex.toFixed(0)}%.`);
+            }
+            S.internationalLoans.activeRequests.splice(index, 1);
+            S.bankMailCount = S.internationalLoans.activeRequests.length;
+            uUI();
+        };
+
+        window.restoreInternationalTrust = () => {
+            const cost = S.internationalLoans.trustPenaltyCost;
+            if (S.m < cost) return;
+            S.m -= cost;
+            S.internationalLoans.trustIndex = 100;
+            alert('✅ تم دفع الغرامة. استعاد مؤشر الثقة الدولية قيمته 100%.');
+            uUI();
+        };
+        
+        function generateInternationalLoanOffer() {
+            if (S.internationalLoans.trustIndex < 100 && Math.random() < (100 - S.internationalLoans.trustIndex) / 100) {
+                 // تقل فرصة القدوم إذا كانت الثقة منخفضة جداً
+                 return;
+            }
+
+            const country = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+            const baseAmount = Math.floor(Math.random() * 9 + 1) * 1e4; // 10k$ to 100k$
+            const interestRate = Math.random() * 0.79 + 0.01; // 1% to 80%
+            const duration = Math.floor(Math.random() * 9 + 1) * 60; // 1 to 10 minutes
+
+            addBankMailMessage({
+                country: country,
+                amount: baseAmount,
+                interestRate: interestRate,
+                timer: duration,
+                id: Date.now()
+            });
+        }
+        
+        function uActiveInternationalLoansUI() {
+            const list = $('activeInternationalLoanList');
+            const activeLoans = S.internationalLoans.myActiveLoans;
+            list.innerHTML = '';
+
+            if (activeLoans.length === 0) {
+                list.insertAdjacentHTML('beforeend', `<p style="text-align:center;color:var(--muted);">لا توجد قروض دولية قيد السداد.</p>`);
+                $('activeInternationalLoans').classList.add('hidden');
+                return;
+            }
+
+            $('activeInternationalLoans').classList.remove('hidden');
+
+            activeLoans.forEach((loan, index) => {
+                const profit = loan.totalRepay - loan.amount;
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="item-row">
+                        <div style="flex-grow:1;">
+                            <span style="font-weight:700;">${loan.country} (استثمار: ${formatNumber(loan.amount)}$)</span>
+                            <p style="font-size:.8em;margin:0;color:var(--success);">ربح: ${formatNumber(profit)}$ | العائد الكلي: ${formatNumber(loan.totalRepay)}$</p>
+                        </div>
+                        <span style="color:var(--warn);">${formatTime(loan.timer)} متبقي</span>
+                    </div>
+                `);
+            });
+        }
+        // --- نهاية وظائف بريد البنك والقروض الدولية الجديدة ---
+
+        function getMachineStats(){
+            const prodMachines=S.machines.filter(m=>!m.isPower&&m.count>0),powerStations=S.machines.filter(m=>m.isPower);
+            const totalMachinesCount=prodMachines.reduce((sum,m)=>sum+m.count,0);
+            let totalPowerOwned=powerStations.reduce((sum,p)=>sum+(p.failureTime<=0?p.powerPerMin:0),0);
+            let machinesRunning=0,currentWorkers=S.w,currentPower=totalPowerOwned,machinesToRun=[];
+            for(const machine of prodMachines)
+                for(let i=0;i<machine.count;i++)
+                    if(!S.isStrike&&S.breakTimer===0&&currentWorkers>=1&&currentPower>=machine.powerConsume){
+                        machinesRunning++;currentWorkers--;currentPower-=machine.powerConsume;machinesToRun.push(machine);
+                    }
+            return {workersExtra:Math.max(0,S.w-totalMachinesCount),machinesRunning,machinesToRun,currentPowerRemaining:currentPower};
+        }
+
+        function uMachineList(){
+            const list=$('machineList');list.innerHTML='';const productionMachines=MACHINES.filter(m=>!m.isPower);
+            productionMachines.forEach(m=>{const owned=S.machines.find(sm=>sm.id===m.id&&!sm.isPower)?.count||0;list.insertAdjacentHTML('beforeend',`<div class="item-row"><span>${m.name} (+${formatNumber(m.pPerMin*1.1/60,0)}P/s) - (يستهلك ${m.powerConsume}MW)</span><div class="h-input-group"><span style="font-weight:700;">مملوك: ${owned}</span><button onclick="buyItem(${m.id},!1)" ${S.m<m.cost?'disabled':''}>شراء (${formatNumber(m.cost)}$)</button></div></div>`);});
+        }
+
+        function uPowerList(){
+            const list=$('powerList');list.innerHTML='';const powerMachines=MACHINES.filter(m=>m.isPower);
+            powerMachines.forEach(m=>{const ownedList=S.machines.filter(sm=>sm.id===m.id&&sm.isPower).length;list.insertAdjacentHTML('beforeend',`<div class="item-row"><span>${m.name} (${m.powerPerMin}MW)</span><div class="h-input-group"><span style="font-weight:700;">مملوك: ${ownedList}</span><button onclick="buyItem(${m.id},!0)" ${S.m<m.cost?'disabled':''}>شراء (${formatNumber(m.cost)}$)</button></div></div>`);});
+            if(S.machines.filter(m=>m.isPower).length>0)list.insertAdjacentHTML('beforeend',`<div style="margin-top:10px;font-size:.8em;color:var(--warn);">* المولدات معرضة للعطل بشكل دوري.</div>`);
+        }
+        function uEstateList(){
+             const list=$('estateList');list.innerHTML='';
+             ESTATES.forEach(e=>{const ownedCount=S.eOwned.filter(owned=>owned[0]===e.id).length;const totalRent=ownedCount*e.rentPerMin;list.insertAdjacentHTML('beforeend',`<div class="item-row"><span>${e.name} (+${formatNumber(e.rentPerMin,0)}P/m)</span><div class="h-input-group"><span style="font-weight:700;">مملوك: ${ownedCount} (المجموع: ${formatNumber(totalRent,0)}P/m)</span><button onclick="buyEstate(${e.id})" ${S.m<e.price?'disabled':''}>شراء (${formatNumber(e.price)}$)</button></div></div>`);});
+        }
+        function uCarList(){
+            const list=$('carList');list.innerHTML='';
+            CARS.forEach(c=>{if(!S.cOwned.some(owned=>owned[0]===c.id))list.insertAdjacentHTML('beforeend',`<div class="item-row"><span>${c.name} (عرض للبيع بعد الشراء)</span><button onclick="buyCar(${c.id})" ${S.m<c.price?'disabled':''}>شراء (${formatNumber(c.price)}$)</button></div>`);});
+            S.cOwned.forEach(car=>{
+                const [id,name,price,rejectedCount,offersLeft,offerValue,nextOfferTime]=car;
+                let statusHtml,buttonsHtml;
+                if(offerValue>0){
+                    const profit=offerValue-price;
+                    statusHtml=`<span style="color:var(--danger);font-weight:700;">عرض: ${formatNumber(offerValue)}$ (${profit>0?'+'+formatNumber(profit)+'$ ربح':formatNumber(profit)+'$ خسارة'})</span>`;
+                    buttonsHtml=`<button class="action-btn" onclick="acceptOffer(${id})">قبول</button><button class="danger-btn" onclick="rejectOffer(${id})">رفض (${offersLeft-1} فرص)</button>`;
+                }else if(offersLeft<=0){
+                    statusHtml=`<span style="color:var(--danger);">مُصادرة وشيكة!</span>`;buttonsHtml=`<button disabled>لا توجد عروض</button>`;
+                }else{
+                    // إخفاء وقت العرض المتبقي
+                    statusHtml=`<span style="color:var(--warn);">في انتظار عرض...</span>`; 
+                    buttonsHtml=`<button disabled>انتظار العرض (${offersLeft} فرص)</button>`;
+                }
+                list.insertAdjacentHTML('beforeend',`<div class="item-row" style="background:${offerValue>0?'rgba(255,107,107,.1)':'transparent'};">
+                    <div style="flex-grow:1;"><span style="font-weight:700;">${name} (شراء: ${formatNumber(price)}$)</span><p style="font-size:.8em;margin:0;color:var(--muted);">رفضت: ${rejectedCount} مرات</p></div>
+                    <div class="h-input-group">${statusHtml}${buttonsHtml}</div></div>`);
+            });
+        }
+        function uAchievementsList(){
+            const list=$('achievementsList');list.innerHTML='';
+            ACHIEVEMENTS.forEach(ach=>{const isAchieved=S.achievements[ach.id];list.insertAdjacentHTML('beforeend',`<div class="item-row" style="opacity:${isAchieved?.5:1};"><span style="font-weight:700;">${ach.name}</span><div class="h-input-group">
+                <span style="color:var(--success);">مكافأة: ${formatNumber(ach.reward)}$</span>
+                <button ${isAchieved?'disabled':`onclick="checkAndClaimAchievement('${ach.id}')"`}>${isAchieved?'مكتمل ✅':'تحقق واستلم'}</button></div></div>`);});
+        }
+        function checkAchievements(){
+            ACHIEVEMENTS.forEach(ach=>{
+                if(!S.achievements[ach.id]&&ach.check()){
+                    S.achievements[ach.id]=!0;S.m+=ach.reward;
+                }
+            });
+        }
+        function uFarmList(){
+            const list=$('farmList');list.innerHTML='';
+            if(S.farm.length===0){list.insertAdjacentHTML('beforeend',`<p style="text-align:center;color:var(--muted);">لا توجد محاصيل مزروعة حالياً.</p>`);return;}
+            S.farm.forEach((crop,index)=>{
+                const totalExpectedReturn=crop.investment*(1+FARM_PROFIT_RATE);
+                const status=crop.ready?`<span style="color:var(--success);font-weight:700;">جاهز للحصاد!</span>`:`<span style="color:var(--warn);">ينمو...</span>`; 
+                const button=crop.ready?`<button class="action-btn" onclick="harvest(${index})">حصاد (${formatNumber(totalExpectedReturn,2)}$)</button>`:`<button disabled>ينمو...</button>`;
+                list.insertAdjacentHTML('beforeend',`<div class="item-row"><div><span style="font-weight:700;">محصول ${index+1} (${formatNumber(crop.seeds,0)} بذرة)</span><p style="font-size:.8em;margin:0;color:var(--muted);">الاستثمار الأصلي: ${formatNumber(crop.investment,0)}$</p></div><div style="display:flex;align-items:center;gap:10px;">${status}${button}</div></div>`);
+            });
+        }
+
+        // -----------------------------------------------------------
+        // 👑 وظيفة عرض الواجهة الجديدة (Black Market UI)
+        // -----------------------------------------------------------
+        window.getCurrentExportPrice = () => {
+            const market = S.blackMarket;
+            let price = market.baseExportPrice * (1 + (market.tensionIndex * 0.5 - 0.25)); 
+            
+            if (market.isFlawedBlueprint) {
+                price *= 0.5; 
+            }
+            return Math.max(1000, price); 
+        };
+
+        window.uBlackMarketUI = () => {
+            const market = S.blackMarket;
+            if (!market) return; 
+            
+            const currentPrice = getCurrentExportPrice();
+
+            if ($('bm_tension')) $('bm_tension').textContent = market.tensionIndex.toFixed(2);
+            if ($('bm_exposure')) $('bm_exposure').textContent = `${market.exposure.toFixed(1)}%`;
+            if ($('bm_price')) $('bm_price').textContent = formatNumber(currentPrice) + '$';
+            if ($('bm_units')) $('bm_units').textContent = formatNumber(market.weaponUnits, 0);
+            
+            // حالة المخططات
+            if ($('bm_blueprint_status')) {
+                let status = '❌ لا يوجد';
+                if (market.hasBlueprints) {
+                    status = market.isFlawedBlueprint ? '⚠️ فاشل (نصف السعر)' : '✅ جاهز';
+                }
+                $('bm_blueprint_status').textContent = status;
+                $('buyBlueprintsBtn').disabled = market.hasBlueprints || S.bank.balance < market.blueprintCost;
+            }
+            
+            // حالة الترخيص
+            if ($('bm_license_status')) {
+                $('bm_license_status').textContent = market.exportLicense ? '✅ نشط' : '❌ لا يوجد';
+                $('buyLicenseBtn').disabled = market.exportLicense || S.bank.balance < market.licenseCost;
+            }
+
+            // حالة آلات التجميع
+            if ($('bm_lines_count')) {
+                $('bm_lines_count').textContent = market.assemblyLines;
+                $('buyAssemblyLineBtn').disabled = !market.hasBlueprints || S.bank.balance < market.assemblyCost;
+            }
+            
+            // حالة الإنتاج
+            if ($('startWeaponProductionBtn')) {
+                const amountToProduce = market.assemblyLines;
+                const pCost = market.pCostPerUnit * amountToProduce;
+                $('startWeaponProductionBtn').disabled = market.assemblyLines === 0 || S.p < pCost || !market.hasBlueprints;
+            }
+            // حالة التصدير
+            if ($('exportWeaponsBtn')) {
+                const totalRevenue = market.weaponUnits * currentPrice;
+                $('exportWeaponsBtn').textContent = `تصدير ${market.weaponUnits} وحدة (ربح مُقدر: ${formatNumber(totalRevenue)}$)`;
+                $('exportWeaponsBtn').disabled = market.weaponUnits === 0 || !market.exportLicense;
+            }
+
+            if(S.currentView === 'view-black-market') {
+                $('view-black-market').style.background = '#020617'; 
+            } else {
+                $('view-black-market').style.background = 'var(--card)';
+            }
+        };
+
+        // -----------------------------------------------------------
+        // 👑 وظائف إدارة السوق السوداء
+        // -----------------------------------------------------------
+        window.buyBlueprints = () => {
+            const market = S.blackMarket;
+            if (market.hasBlueprints || S.bank.balance < market.blueprintCost) return;
+            
+            S.bank.balance -= market.blueprintCost;
+            market.hasBlueprints = true;
+            
+            if (Math.random() < 0.10) { 
+                market.isFlawedBlueprint = true;
+                alert(`⚠️ شراء المخططات فشل! تم اكتشاف خطأ (Flawed Blueprint). سعر البيع الدائم -50%.`);
+            } else {
+                alert(`✅ تم شراء المخططات السرية بنجاح! ابدأ بشراء خطوط التجميع.`);
+            }
+            uUI();
+        };
+
+        window.buyAssemblyLine = () => {
+            const market = S.blackMarket;
+            if (!market.hasBlueprints || S.bank.balance < market.assemblyCost) return;
+            
+            S.bank.balance -= market.assemblyCost;
+            market.assemblyLines += 1;
+            alert(`✅ تم شراء خط تجميع جديد. عدد خطوط التجميع: ${market.assemblyLines}.`);
+            uUI();
+        };
+
+        window.buyExportLicense = () => {
+            const market = S.blackMarket;
+            if (market.exportLicense || S.bank.balance < market.licenseCost) return;
+            
+            S.bank.balance -= market.licenseCost;
+            market.exportLicense = true;
+            alert(`✅ تم شراء ترخيص التصدير. الآن يمكنك البيع!`);
+            uUI();
+        };
+
+        window.startWeaponProduction = () => {
+            const market = S.blackMarket;
+            const amountToProduce = market.assemblyLines;
+            const pCost = market.pCostPerUnit * amountToProduce;
+
+            if (!market.hasBlueprints) { alert('يجب شراء المخططات أولاً!'); return; }
+            if (amountToProduce === 0) { alert('يجب شراء آلات التجميع أولاً!'); return; }
+            if (S.p < pCost) { alert(`نقاطك (P) غير كافية! تحتاج ${formatNumber(pCost, 0)}P لإنتاج ${amountToProduce} وحدة.`); return; }
+            
+            S.p -= pCost;
+            market.weaponUnits += amountToProduce;
+            alert(`✅ تم تصنيع ${amountToProduce} وحدة سلاح باستخدام ${formatNumber(pCost, 0)}P. أصبحت جاهزة للتصدير.`);
+            uUI();
+        };
+
+        window.exportWeapons = () => {
+            const market = S.blackMarket;
+            if (market.weaponUnits === 0 || !market.exportLicense) return;
+
+            const units = market.weaponUnits;
+            const price = getCurrentExportPrice();
+            const revenue = units * price;
+            
+            market.exposure += units * 5; 
+            
+            S.bank.balance += revenue;
+            market.weaponUnits = 0;
+            
+            addMailMessage('اقتصاد كلي', `🔥 تم تصدير ${units} وحدة سلاح مقابل ${formatNumber(revenue)}$ إلى البنك المركزي.`);
+            alert(`🔥 صفقة تصدير ناجحة! إجمالي الربح: ${formatNumber(revenue)}$، زاد التعرض للخطر إلى ${market.exposure.toFixed(1)}%.`);
+            uUI();
+        };
+
+        // -----------------------------------------------------------
+        // 👑 وظيفة التحديثات الدورية للسوق السوداء
+        // -----------------------------------------------------------
+        window.updateBlackMarketStatus = () => {
+            const market = S.blackMarket;
+            
+            // 1. تقلب مؤشر التوتر العالمي (كل دقيقة)
+            const volatility = 0.15; 
+            market.tensionIndex = Math.min(1.0, Math.max(0.1, market.tensionIndex + (Math.random() * volatility * 2 - volatility)));
+
+            // 2. التحقق من التعرض للخطر (المصادرة)
+            if (market.exposure >= 100) {
+                const confiscatedAmount = S.bank.balance * 0.50;
+                S.bank.balance -= confiscatedAmount;
+                market.exposure = 0;
+                addMailMessage('مصادرة سيارة', `🚨 تم الكشف عن أنشطتك! مصادرة 50% من رصيد البنك المركزي: ${formatNumber(confiscatedAmount)}$.`);
+                alert(`🚨 كارثة! تم الكشف عن أنشطتك السرية ومصادرة 50% من رصيدك في البنك المركزي!`);
+            }
+        };
+
+        
+        function uUI(){
+            const stats=getMachineStats();const isBigLoanActive=S.bigLoan.active;const isSmallLoanActive=S.debt>0;
+            const totalDebt=S.debt+(isBigLoanActive?S.bigLoan.totalRepay:0);const isBreaking=S.breakTimer>0;const isStrike=S.isStrike;
+            const isPenaltyTime=!S.bigLoan.active&&S.bigLoan.initial>0&&S.bigLoan.totalRepay>0&&S.bigLoan.timer<=0;
+            const currentPToM=S.flashSale.active?FLASH_SALE_P_TO_M:BASE_P_TO_M;const currentConversionRate=100/currentPToM;
+            
+            $('h_money').textContent=formatNumber(S.m,S.m<1e3?2:1)+'$';$('h_bank').textContent=formatNumber(S.bank.balance,S.bank.balance<1e3?2:1)+'$';$('h_points').textContent=formatNumber(S.p,0)+'P';
+
+            if($('debt'))$('debt').textContent=formatNumber(totalDebt,totalDebt<1e3?2:1);
+            if($('power'))$('power').textContent=stats.currentPowerRemaining.toFixed(0); 
+            if($('workers_extra'))$('workers_extra').textContent=stats.workersExtra;
+            if($('machines_running'))$('machines_running').textContent=stats.machinesRunning;
+            if($('factoryLvl'))$('factoryLvl').textContent=S.factoryLvl;
+            if($('upgradeFactoryBtn')){$('upgradeFactoryBtn').textContent=`ترقية (${formatNumber(S.upgradeCost,S.upgradeCost<1e3?2:1)} رصيد)`;$('upgradeFactoryBtn').disabled=S.m<S.upgradeCost;}
+            if($('bankP'))$('bankP').textContent=formatNumber(S.bankP,0);
+            
+            if($('convertBtn')){$('convertBtn').textContent=`تحويل النقاط (100P = ${formatNumber(currentConversionRate,2)}$ ${S.flashSale.active?'🔥':''})`;$('convertBtn').classList.toggle('warn-btn',!S.flashSale.active);$('convertBtn').classList.toggle('danger-btn',S.flashSale.active);}
+            if($('moralePercent'))$('moralePercent').textContent=`${S.morale.toFixed(0)}%`;
+            const moraleBar=$('moraleBar');
+            if(moraleBar){
+                moraleBar.style.width=`${S.morale}%`;
+                moraleBar.style.background=S.morale>75?'var(--success)':S.morale>25?'var(--warn)':'var(--danger)';
+            }
+
+            const statusMsg=$('statusMsg');
+            if(statusMsg){
+                if(isStrike){statusMsg.textContent=`🔴 إضراب العمال! توقف الإنتاج تماماً. ادفع للطعام لإنهائه.`;}
+                else if(S.flashSale.active){statusMsg.textContent=`🔥 صعود أسعار جنوني! ${formatNumber(currentConversionRate,2)}$ لكل 100P. متبقي: ${S.flashSale.timer} ثواني!`;statusMsg.style.color='var(--danger)';}
+                else if(isBreaking){statusMsg.textContent=`استراحة العمال! توقف الإنتاج مؤقتاً (${S.breakTimer} ثانية متبقية).`;}
+                else{statusMsg.textContent='المعمل يعمل بكامل طاقته.';statusMsg.style.color='var(--warn)';}
+            }
+
+            const failedGenerators=S.machines.filter(m=>m.isPower&&m.failureTime>0).length;const powerFailureStatus=$('powerFailureStatus');
+            if(powerFailureStatus){
+                if(failedGenerators>0){powerFailureStatus.textContent=`يوجد ${failedGenerators} مولد معطل (${S.machines.find(m=>m.failureTime>0)?.failureTime||0}s)!`;powerFailureStatus.style.color='var(--danger)';}
+                else{powerFailureStatus.textContent='لا توجد أعطال';powerFailureStatus.style.color='var(--success)';}
+            }
+            
+            const mailIcon = $('mailIcon');
+            if(mailIcon) mailIcon.classList.toggle('unread', S.offersCount > 0);
+            if($('mailCount')){$('mailCount').textContent=S.offersCount;$('mailCount').classList.toggle('hidden',S.offersCount===0);}
+            
+            // 👑 أيقونة بريد البنك
+            const bankMailIcon = $('bankMailIcon');
+            if(bankMailIcon) bankMailIcon.classList.toggle('unread', S.internationalLoans.activeRequests.length > 0);
+            if($('bankMailCount')){$('bankMailCount').textContent=S.internationalLoans.activeRequests.length;$('bankMailCount').classList.toggle('hidden',S.internationalLoans.activeRequests.length===0);}
+            
+            if($('bigLoanForm'))$('bigLoanForm').classList.toggle('hidden',isBigLoanActive||isPenaltyTime);
+            if($('bigLoanStatus'))$('bigLoanStatus').classList.toggle('hidden',!isBigLoanActive); 
+            if($('loanConsequence'))$('loanConsequence').classList.toggle('hidden',!isPenaltyTime);
+            
+            if(isBigLoanActive&&$('currentLoanAmount')){
+                const minPayment=S.bigLoan.totalRepay*.10;
+                $('currentLoanAmount').textContent=formatNumber(S.bigLoan.amount,S.bigLoan.amount<1e3?2:1);
+                $('totalRepayAmount').textContent=formatNumber(S.bigLoan.totalRepay,S.bigLoan.totalRepay<1e3?2:1);
+                $('currentInterestRate').textContent=(S.bigLoan.interest*100).toFixed(0);
+                $('bigLoanTimer').textContent=formatTime(S.bigLoan.timer);
+                $('minPaymentAmount').textContent=formatNumber(minPayment,minPayment<1e3?2:1);
+                $('repayAmount').min=minPayment.toFixed(2);
+                $('repayAmount').value=Math.min(S.bigLoan.totalRepay,Math.max(minPayment,parseFloat($('repayAmount').value)||0)).toFixed(2);
+            }
+            
+            if($('loan500Btn'))$('loan500Btn').disabled=isSmallLoanActive||isBigLoanActive||isPenaltyTime;
+            if($('loan250Btn'))$('loan250Btn').disabled=isSmallLoanActive||isBigLoanActive||isPenaltyTime;
+            if($('smallLoanStatus'))$('smallLoanStatus').classList.toggle('hidden',!isSmallLoanActive);
+            if(isSmallLoanActive&&$('currentSmallDebt'))$('currentSmallDebt').textContent=formatNumber(S.debt,S.debt<1e3?2:1);
+
+            if($('buyWorkerBtn'))$('buyWorkerBtn').disabled=S.m<W_COST;
+            if($('feedWorkerBtn'))$('feedWorkerBtn').disabled=S.m<FOOD_COST||S.w===0;
+            if($('convertBtn'))$('convertBtn').disabled=S.p<100;
+            
+            uBlackMarketUI(); 
+
+            if(S.currentView==='view-game'){uMachineList();uPowerList();uMailList();} 
+            else if(S.currentView==='view-estate'){uEstateList();}
+            else if(S.currentView==='view-car'){uCarList();}
+            else if(S.currentView==='view-achievements'){uAchievementsList();}
+            else if(S.currentView==='view-bank'){
+                if($('bankBalance'))$('bankBalance').textContent=formatNumber(S.bank.balance,S.bank.balance<1e3?2:1);
+                if($('depositAmount'))$('depositAmount').max=S.m.toFixed(2);
+                if($('withdrawAmount'))$('withdrawAmount').max=S.bank.balance.toFixed(2);
+                if($('carProfitDisplay'))$('carProfitDisplay').textContent=formatNumber(S.carProfit,S.carProfit<1e3?2:1)+'$';
+                if($('carProfit'))$('carProfit').textContent=formatNumber(S.carProfit,S.carProfit<1e3?2:1);
+                uBankMailUI(); // تحديث واجهة بريد البنك
+                uActiveInternationalLoansUI();
+            }
+            else if(S.currentView==='view-farm'){uFarmList();}
+            else if (S.currentView === 'view-phones') {
+                if ($('phone_parts')) $('phone_parts').textContent = formatNumber(S.phones.parts, 0);
+                if ($('phone_batteries')) $('phone_batteries').textContent = formatNumber(S.phones.batteries, 0);
+                if ($('phone_stock')) $('phone_stock').textContent = formatNumber(S.phones.stock, 0);
+                if ($('phone_machine_count')) $('phone_machine_count').textContent = formatNumber(S.phones.machine.count, 0);
+                if ($('phoneMachineCostDisplay')) $('phoneMachineCostDisplay').textContent = formatNumber(S.phones.machine.cost);
+
+                 if ($('phone_storage_capacity')) $('phone_storage_capacity').textContent = formatNumber(S.phones.storageCapacity, 0);
+                if ($('buyStorageBtn')) {
+                    $('buyStorageBtn').textContent = `شراء مساحة هاتف واحد (${formatNumber(S.phones.storageCost)}$)`;
+                    $('buyStorageBtn').disabled = S.m < S.phones.storageCost;
+                }
+
+                if ($('buyPhoneMachineBtn')) {
+                    $('buyPhoneMachineBtn').textContent = `شراء آلة (${formatNumber(S.phones.machine.cost)}$)`;
+                    $('buyPhoneMachineBtn').disabled = S.m < S.phones.machine.cost;
+                }
+                const shipmentStatus = $('shipmentStatus');
+                if (S.shipments.length > 0) {
+                    shipmentStatus.style.color = 'var(--warn)';
+                    shipmentStatus.innerHTML = S.shipments.map(s => 
+                        `⚠️ شحنة ${s.count} تجميعة مكونات قادمة.`).join('<br>'); 
+                } else {
+                    shipmentStatus.innerHTML = 'لا توجد شحنات قادمة حالياً.';
+                    shipmentStatus.style.color = 'var(--muted)';
+                }
+                const prodList = $('productionList');
+                prodList.innerHTML = S.phones.production.length > 0
+                    ? S.phones.production.map((p, i) => 
+                        `<div class="item-row"><span>هاتف قيد التصنيع #${i + 1}</span><span>متبقي: ${formatTime(p.timer)}</span></div>`).join('')
+                    : `<p style="text-align:center;color:var(--muted);">لا يوجد شيء قيد التصنيع.</p>`;
+                
+                if ($('startProductionBtn')) {
+                    const currentTotalStorage = S.phones.stock + S.phones.production.length;
+                    const capacityRemaining = S.phones.storageCapacity - currentTotalStorage;
+                    const availableToProduce = Math.min(S.phones.parts, S.phones.batteries, S.phones.machine.count);
+                    const canStart = Math.min(availableToProduce, capacityRemaining);
+                    
+                    $('startProductionBtn').disabled = canStart <= 0;
+                    $('startProductionBtn').textContent = `بدء تصنيع (${canStart} هاتف)`;
+                }
+
+                const orderStatus = $('orderStatus');
+                if (S.phones.currentOrder) {
+                    const order = S.phones.currentOrder;
+                    orderStatus.innerHTML = `
+                        <h4 style="color:var(--info);margin-top:0;">
+                            نوع الطلب: ${order.type}
+                        </h4>
+                        <p>الكمية المطلوبة: <span style="font-weight:700;">${order.required} هاتف</span></p>
+                        <p>سعر البيع: <span style="font-weight:700;color:var(--success);">${formatNumber(order.price)}$ / هاتف</span></p>
+                        <p style="display:none;">الوقت المتبقي للتنفيذ: <span style="font-weight:700;">--</span></p>
+                    `;
+                    $('sellPhonesBtn').disabled = S.phones.stock < order.required || order.timer <= 0;
+                    $('sellPhonesBtn').textContent = `بيع ${order.required} هاتف`;
+                } else {
+                    orderStatus.innerHTML = `<p style="text-align:center;color:var(--muted);">لا يوجد طلب نشط حالياً. ننتظر طلب جديد.</p>`; 
+                    $('sellPhonesBtn').disabled = true;
+                }
+            }
+        }
+        
+        function plantSeeds(count){
+            if(isNaN(count)||count<=0){alert('الرجاء إدخال عدد صحيح وموجب للبذور.');return;}
+            const totalCost=count*SEED_COST;
+            if(S.m<totalCost){alert('الرصيد المحلي غير كافٍ لشراء البذور.');return;}
+            S.m-=totalCost;
+            const growthTime=Math.floor(Math.random()*(FARM_GROWTH_MAX-FARM_GROWTH_MIN+1))+FARM_GROWTH_MIN;
+            S.farm.push({seeds:count,investment:totalCost,timer:growthTime,ready:!1});
+            uUI();
+        }
+
+        function harvest(index){
+            const crop=S.farm[index];if(!crop||!crop.ready)return;
+            const totalReturn=crop.investment*(1+FARM_PROFIT_RATE);
+            S.bank.balance+=totalReturn;S.farm.splice(index,1);
+            alert(`🎉 حصاد ناجح! إجمالي العائد: ${formatNumber(totalReturn,2)}$ تم تحويله إلى البنك المركزي.`);
+            uUI();
+        }
+
+        // 👑 وظيفة حصد الكل
+        window.harvestAllReady = () => {
+            let totalRevenue = 0;
+            // جمع العائدات
+            const cropsToHarvest = S.farm.filter(crop => crop.ready);
+            if (cropsToHarvest.length === 0) {
+                alert('لا توجد محاصيل جاهزة للحصاد حالياً.');
+                return;
+            }
+
+            cropsToHarvest.forEach(crop => {
+                totalRevenue += crop.investment * (1 + FARM_PROFIT_RATE);
+            });
+
+            // تحديث الحالة
+            S.bank.balance += totalRevenue;
+            S.farm = S.farm.filter(crop => !crop.ready);
+            
+            alert(`🎉 تم حصاد ${cropsToHarvest.length} محصولاً جاهزاً. إجمالي العائد: ${formatNumber(totalRevenue, 2)}$ تم تحويله إلى البنك المركزي.`);
+            uUI();
+        };
+        
+        function transferMoney(type,all=!1){
+            let amount=0;const input=$(`${type}Amount`);
+            if(type==='deposit'){
+                amount=all?S.m:parseFloat(input.value);
+                if(isNaN(amount)||amount<=0){alert('يجب إدخال مبلغ صحيح.');return;}
+                amount=Math.min(amount,S.m);if(amount<=0){alert('ليس لديك رصيد محلي كافٍ للإيداع.');return;}
+                S.m-=amount;S.bank.balance+=amount;alert(`✅ تم إيداع ${formatNumber(amount,2)}$ في البنك المركزي بنجاح.`);input.value='100';
+            }else if(type==='withdraw'){
+                amount=all?S.bank.balance:parseFloat(input.value);
+                if(isNaN(amount)||amount<=0){alert('يجب إدخال مبلغ صحيح.');return;}
+                amount=Math.min(amount,S.bank.balance);if(amount<=0){alert('ليس لديك رصيد كافٍ في البنك المركزي للسحب.');return;}
+                const fee=amount*BANK_WITHDRAWAL_FEE;const netAmount=amount-fee;
+                S.bank.balance-=amount;S.m+=netAmount;
+                alert(`✅ تم سحب ${formatNumber(amount,2)}$، واقتطع ${formatNumber(fee,2)}$ رسوم. صافي المبلغ: ${formatNumber(netAmount,2)}$.`);input.value='100';
+            }
+            uUI();
+        }
+
+        window.takeSmallLoan=(amount,interest)=>{if(S.debt>0||S.bigLoan.active)return;S.debt=amount;S.loanA=interest;S.m+=amount;uUI();};
+        window.repaySmallLoan=()=>{if(S.debt===0)return;if(S.m<S.debt){alert('ليس لديك رصيد كافٍ لسداد الدين الحالي.');return;}S.m-=S.debt;S.debt=0;S.loanA=0;uUI();};
+        
+        // 👑 تحديث القرض الكبير (2M وفائدة 100%)
+        window.takeBigLoan=()=>{ 
+            if(S.debt>0||S.bigLoan.active)return;
+            const amount=parseFloat($('bigLoanAmount').value);const extraMinutes=parseInt($('extraTime').value);
+            // 👑 تحديث الحد الأقصى للمبلغ
+            if(amount<1e4||amount>2e6||isNaN(amount)||extraMinutes<0||isNaN(extraMinutes))return;
+            // 👑 تعديل الفائدة الأساسية إلى 1.0 (100%)
+            let totalInterestRate=1.00+extraMinutes*.01;
+            const totalRepay=amount*(1+totalInterestRate);const initialTimer=600+extraMinutes*60;
+            S.bigLoan={initial:amount,amount:amount,interest:totalInterestRate,totalRepay:totalRepay,initialTotalRepay:totalRepay,timer:initialTimer,initialTimer:initialTimer,active:!0};
+            S.m+=amount;uUI();
+        };
+        window.repayBigLoan=percentage=>{ 
+            if(!S.bigLoan.active||S.bigLoan.totalRepay<=0)return;const minPayment=S.bigLoan.totalRepay*.10;
+            let amountToRepay=percentage===.10?minPayment:parseFloat($('repayAmount').value);
+            if(amountToRepay<minPayment){alert('الحد الأدنى للسداد هو 10% من المبلغ الكلي المتبقي.');return;}
+            if(S.m<amountToRepay){alert('ليس لديك رصيد كافٍ!');return;}
+            if(amountToRepay>S.bigLoan.totalRepay){amountToRepay=S.bigLoan.totalRepay;}
+            S.m-=amountToRepay;S.bigLoan.totalRepay-=amountToRepay;
+            S.bigLoan.amount-=S.bigLoan.initial*(amountToRepay/S.bigLoan.initialTotalRepay); 
+            if(amountToRepay>0)S.bigLoan.timer=S.bigLoan.initialTimer; 
+            if(S.bigLoan.totalRepay<=.01){S.m+=Math.abs(S.bigLoan.totalRepay);S.bigLoan={amount:0,initial:0,totalRepay:0,timer:0,interest:0,active:!1,initialTotalRepay:0,initialTimer:0};alert('✅ تم سداد القرض الكبير بنجاح!');}
+            uUI();
+        };
+        window.applyPenalty=option=>{ 
+            if(S.bigLoan.initial===0||S.bigLoan.totalRepay<=0)return; 
+            if(option===1){
+                const penaltyCost=1e4;
+                if(S.m<penaltyCost){applyPenalty(2);return;}
+                S.m-=penaltyCost;S.bigLoan.interest+=.10;S.bigLoan.totalRepay=S.bigLoan.initial*(1+S.bigLoan.interest);
+                S.bigLoan.initialTotalRepay=S.bigLoan.totalRepay;S.bigLoan.timer=S.bigLoan.initialTimer;S.bigLoan.active=!0;
+                alert(`⚠️ تم دفع الغرامة ${formatNumber(penaltyCost,0)}$ وزيادة الفائدة. لديك فرصة أخرى.`);
+            }else if(option===2){
+                S.m=0;S.p=0;S.w=0;S.bankP=0;S.power=0;S.debt=0;S.cOwned=[];S.eOwned=[];S.machines=[];S.farm=[];S.phones.parts=0;S.phones.batteries=0;S.phones.stock=0;S.phones.production=[];S.shipments=[];
+                S.bigLoan={amount:0,initial:0,totalRepay:0,timer:0,interest:0,active:!1,initialTotalRepay:0,initialTimer:0};
+                alert('🚨 مصادرة تامة! تم سحب جميع الممتلكات والأموال المحلية. أموالك في البنك المركزي آمنة.');
+            }
+            uUI();
+        };
+
+        // --- وظائف سوق الهواتف ---
+        window.buyPhoneMachine=()=>{
+            const cost=S.phones.machine.cost;
+            if(S.m<cost){alert('الرصيد المحلي غير كافٍ لشراء آلة تصنيع.');return;}
+            S.m-=cost;
+            S.phones.machine.count++;
+            S.phones.machine.cost*=1.2; 
+            uUI();
+        };
+
+        window.buyPhoneStorage=()=>{
+            const cost=S.phones.storageCost;
+            if(S.m<cost){alert('الرصيد المحلي غير كافٍ لشراء مساحة تخزين.');return;}
+            S.m-=cost;
+            S.phones.storageCapacity++;
+            uUI();
+        };
+
+        window.orderComponents=()=>{
+            const count=parseInt($('componentAmount').value);
+            if(isNaN(count)||count<=0){alert('الرجاء إدخال عدد صحيح وموجب.');return;}
+            const totalCost=count*S.phones.cost;
+            if(S.m<totalCost){alert('الرصيد المحلي غير كافٍ لطلب هذه المكونات.');return;}
+            
+            S.m-=totalCost;
+            const arrivalTime=Math.floor(Math.random()*(120-30+1))+30; 
+            S.shipments.push({type:'phoneComponents', count:count, timer:arrivalTime, cost:totalCost});
+            addMailMessage('شحنة هاتف (وصول)', `تم إرسال طلب شحنة ${count} تجميعة مكونات. قادمة خلال ${formatTime(arrivalTime)} تقريباً.`);
+            uUI();
+        };
+
+        window.startPhoneProduction=()=>{
+            const currentTotalStorage = S.phones.stock + S.phones.production.length;
+            const capacityRemaining = S.phones.storageCapacity - currentTotalStorage;
+            const availableToProduce=Math.min(S.phones.parts, S.phones.batteries);
+            const machinesAvailable=S.phones.machine.count;
+
+            const canStart=Math.min(availableToProduce, machinesAvailable, capacityRemaining);
+            
+            if(canStart<=0){
+                alert(`لا يمكن بدء التصنيع. تحقق من المكونات المتاحة (${availableToProduce})، أو الآلات (${machinesAvailable})، أو سعة التخزين المتبقية (${capacityRemaining}).`);
+                return;
+            }
+            
+            S.phones.parts-=canStart;
+            S.phones.batteries-=canStart;
+            
+            for(let i=0;i<canStart;i++){
+                S.phones.production.push({timer:30}); 
+            }
+            
+            uUI();
+        };
+
+        function generateNewOrder(){
+            const minProfitRate = 0.10;
+            const maxProfitRate = 0.66;
+            const baseCost = S.phones.cost; 
+
+            const profitRate = minProfitRate + Math.random() * (maxProfitRate - minProfitRate);
+            const price = Math.round(baseCost * (1 + profitRate)); 
+
+            let type, required;
+            const roll = Math.random();
+
+            if (roll < 0.50) { 
+                type = 'زبون عادي';
+                required = 1;
+            } else if (roll < 0.85) { 
+                type = 'تاجر جملة';
+                required = 3;
+            } else { 
+                type = 'شركة عالمية';
+                required = 6;
+            }
+            
+            S.phones.currentOrder={
+                required: required, 
+                price: price,
+                timer: 15*60, 
+                type: type, 
+                id: Date.now()
+            };
+            
+            addMailMessage('طلب هاتف (جديد)', `وصل طلب شراء جديد من نوع ${type} بكمية ${required}.`);
+        }
+
+        window.sellPhones=()=>{
+            if(!S.phones.currentOrder||S.phones.stock===0||S.phones.currentOrder.timer<=0)return;
+
+            const order=S.phones.currentOrder;
+            
+            if(S.phones.stock < order.required){
+                 alert(`❌ لا يوجد مخزون كافٍ! الكمية المطلوبة: ${order.required}، المخزون: ${S.phones.stock}.`);
+                 return;
+            }
+
+            const soldCount=order.required;
+            const revenue=soldCount*order.price;
+            
+            S.phones.stock-=soldCount;
+            S.bank.balance+=revenue; 
+            
+            S.phones.currentOrder=null;
+            S.phones.nextOrderCheck=Math.floor(Math.random()*180)+30; 
+            
+            uUI();
+        };
+        // --- نهاية وظائف سوق الهواتف ---
+
+        let minuteCounter=0;
+        function gameTick(){
+            if(S.breakTimer>0){S.breakTimer--;if(S.breakTimer>0){uUI();return;}}
+            if(S.flashSale.active){S.flashSale.timer--;if(S.flashSale.timer<=0){S.flashSale.active=!1;S.flashSale.nextMinute=minuteCounter+Math.floor(Math.random()*(FLASH_SALE_MAX_WAIT-FLASH_SALE_MIN_WAIT+1))+FLASH_SALE_MIN_WAIT;alert('🔥 انتهى صعود الأسعار، عاد السوق لطبيعته.');}}
+            if(S.isStrike){uUI();return;}
+            S.machines.filter(m=>m.isPower).forEach(p=>{if(p.failureTime>0){p.failureTime--;}});
+            S.m-=S.w*.1;
+            if(S.debt>0&&S.loanA>0&&(Date.now()%1e4<1e3)){S.debt+=S.debt*S.loanA*(10/60);}
+            const stats=getMachineStats();
+            if(stats.machinesRunning>0){const efficiency=(1+((S.factoryLvl-1)*.01))*1.1; for(const machine of stats.machinesToRun){S.p+=(machine.pPerMin/60)*efficiency;}}
+            if(S.bigLoan.active&&S.bigLoan.timer>0){S.bigLoan.timer--;} 
+            if(S.bigLoan.active&&S.bigLoan.timer<=0&&S.bigLoan.totalRepay>0){S.bigLoan.active=!1;alert('🔴 انتهى وقت سداد القرض الكبير! يجب اتخاذ قرار.');}
+            
+            S.cOwned.forEach(car=>{
+                if(car[5]===0&&car[4]>0){
+                    if(car[6]>0){
+                        car[6]--;
+                    }else{
+                        car[5]=generateOfferValue(car[2]);
+                        car[6]=generateNextOfferTime();
+                        addMailMessage('عرض سيارة', `هناك عرض جديد على سيارة ${car[1]}.`); 
+                    }
+                }
+            });
+            
+            S.farm.forEach((crop, index)=>{
+                if(!crop.ready&&crop.timer>0){
+                    crop.timer--;
+                    if(crop.timer<=0){
+                        crop.ready=!0;
+                        addMailMessage('حصاد مزرعة (جاهز)', `المحصول #${index + 1} جاهز للحصاد.`); 
+                    }
+                }
+            });
+
+            S.shipments.forEach((s, index) => {
+                s.timer--;
+                if (s.timer <= 0) {
+                    S.phones.parts += s.count;
+                    S.phones.batteries += s.count;
+                    addMailMessage('شحنة هاتف (وصول)', `تم وصول شحنة ${s.count} تجميعة مكونات.`); 
+                    S.shipments.splice(index, 1);
+                }
+            });
+
+            S.phones.production.forEach((p, index) => {
+                p.timer--;
+                if (p.timer <= 0) {
+                    S.phones.stock++;
+                    S.phones.production.splice(index, 1);
+                }
+            });
+
+            if (S.phones.currentOrder) {
+                S.phones.currentOrder.timer--;
+                if (S.phones.currentOrder.timer <= 0) {
+                    S.phones.currentOrder = null;
+                    S.phones.nextOrderCheck = Math.floor(Math.random() * 180) + 30;
+                }
+            } else {
+                S.phones.nextOrderCheck--;
+                if (S.phones.nextOrderCheck <= 0) {
+                    generateNewOrder();
+                }
+            }
+            
+            // 👑 تحديث القروض الدولية النشطة (لك)
+            S.internationalLoans.myActiveLoans.forEach((loan, index) => {
+                loan.timer--;
+                if (loan.timer <= 0) {
+                    S.bank.balance += loan.totalRepay;
+                    S.internationalLoans.myActiveLoans.splice(index, 1);
+                    alert(`🎉 تم سداد قرض ${loan.country}! الإجمالي: ${formatNumber(loan.totalRepay)}$ للبنك المركزي.`);
+                }
+            });
+
+            checkAchievements();uUI();
+        }
+        let loanOfferTimer = 0; // مؤقت لطلب القرض الدولي
+        function minuteTick(){
+            minuteCounter++;
+            S.eOwned.forEach(e=>{S.bankP+=e[2];});
+            
+            if (S.blackMarket) updateBlackMarketStatus(); 
+
+            if(S.w>0){
+                 S.morale=Math.max(0,S.morale-MORALE_DROP_PER_MIN);
+                 if(S.morale<=25&&!S.isStrike){S.isStrike=!0;alert('🔴 انخفض رضا العمال إلى ما دون 25%! بدأ الإضراب. توقف الإنتاج. ادفع للطعام لإنهائه.');}
+            }
+            if(!S.flashSale.active&&minuteCounter>=S.flashSale.nextMinute){S.flashSale.active=!0;S.flashSale.timer=FLASH_SALE_DURATION;alert('🚀 بدأت فترة صعود الأسعار! تحويل 100P يمنحك 10$ الآن!');}
+            if(minuteCounter%10===0){
+                S.machines.filter(m=>m.isPower).forEach(p=>{if(p.failureTime<=0&&Math.random()<.05){p.failureTime=60;alert(`🚨 عطل مفاجئ في المولد الكهربائي! توقف لمدة دقيقة واحدة.`);}});
+            }
+            if(minuteCounter%15===0&&S.w>0){S.breakTimer=Math.floor(Math.random()*(120-30+1))+30;}
+
+            if (S.phones.stock > 0) {
+                const totalMaintenanceCost = S.phones.stock * S.phones.maintenanceCost;
+                if (S.m >= totalMaintenanceCost) {
+                    S.m -= totalMaintenanceCost;
+                } else {
+                    S.m = 0;
+                }
+            }
+            
+            // 👑 طلب قرض دولي جديد كل 3-7 دقائق
+            loanOfferTimer++;
+            if(loanOfferTimer >= (Math.floor(Math.random() * 5) + 3)){
+                 generateInternationalLoanOffer();
+                 loanOfferTimer = 0;
+            }
+
+            uUI();
+        }
+
+        window.changeView=v=>{
+             const views=['view-home','view-game','view-car','view-estate','view-achievements','view-bank','view-farm','view-phones','view-black-market'];
+             views.forEach(id=>{const el=$(id);if(el)el.classList.add('hidden');});
+             const targetEl=$(v);if(targetEl)targetEl.classList.remove('hidden');
+             S.currentView=v;uUI();
+        };
+        $('feedWorkerBtn').onclick=()=>{ 
+             if(S.w===0){alert('لا يوجد عمال لإطعامهم!');return;}
+             if(S.m<FOOD_COST){alert('الرصيد غير كافٍ لصرف 100$ للطعام.');return;}
+             S.m-=FOOD_COST;S.morale=100;
+             if(S.isStrike){S.isStrike=!1;alert('✅ تم دفع طعام العمال! عاد العمال للعمل.');} 
+             else{alert('✅ تم صرف الطعام! رضا العمال الآن 100%.');}
+             uUI();
+        };
+        $('collectBtn').onclick=()=>{ S.p+=1; uUI(); }; 
+        $('convertBtn').onclick=()=>{
+            const currentPToM=S.flashSale.active?FLASH_SALE_P_TO_M:BASE_P_TO_M;const currentConversionRate=100/currentPToM; 
+            const units=Math.floor(S.p/100); 
+            if(units>0){S.m+=units*currentConversionRate;S.p-=units*100;alert(`تم تحويل ${formatNumber(units*100,0)} نقطة إلى ${formatNumber(units*currentConversionRate,2)}$ رصيد.`);}
+            else{alert('لا يوجد نقاط كافية للتحويل (تحتاج 100P).')}
+            uUI(); 
+        };
+        $('buyWorkerBtn').onclick=()=>{if(S.m>=W_COST){S.m-=W_COST;S.w+=1;uUI();}};
+        $('collectBankPBtn').onclick=()=>{if(S.bankP>0){S.p+=S.bankP;S.bankP=0;}uUI();};
+        $('upgradeFactoryBtn').onclick=()=>{
+             if(S.m>=S.upgradeCost){S.m-=S.upgradeCost;S.factoryLvl++;S.upgradeCost*=1.07;alert(`✅ تمت ترقية المعمل للمستوى ${S.factoryLvl}! زادت كفاءة الإنتاج 1%.`);uUI();}
+             else{alert('لا يوجد رصيد كافٍ للترقية.');}
+        };
+        window.buyItem=(id,isPower)=>{
+            const itemBase=MACHINES.find(m=>m.id===id&&m.isPower===isPower);
+            if(!itemBase||S.m<itemBase.cost)return;S.m-=itemBase.cost;
+            if(isPower){S.machines.push({...itemBase,count:1,failureTime:0});}
+            else{const existing=S.machines.find(sm=>sm.id===id&&!sm.isPower);if(existing){existing.count++;}else{S.machines.push({...itemBase,count:1});}}
+            uUI();
+        };
+        window.buyEstate=id=>{const e=ESTATES.find(e=>e.id===id);if(e&&S.m>=e.price){S.m-=e.price;S.eOwned.push([e.id,e.name,e.rentPerMin,e.price]);}uUI();};
+        window.buyCar=id=>{const car=CARS.find(c=>c.id===id);if(S.cOwned.some(car=>car[0]===id)){alert(`لديك بالفعل سيارة من نوع ${car.name}.`);return;}
+            if(car&&S.m>=car.price){S.m-=car.price;S.cOwned.push([car.id,car.name,car.price,0,5,0,generateNextOfferTime()]);}uUI();};
+        window.acceptOffer=id=>{
+             const carIndex=S.cOwned.findIndex(c=>c[0]===id&&c[5]>0);
+             if(carIndex!==-1){
+                 const car=S.cOwned[carIndex];
+                 const profit=car[5]-car[2];
+                 S.bank.balance+=car[5];
+                 S.carProfit+=profit;
+                 S.cOwned.splice(carIndex,1);
+                 alert(`✅ تم بيع ${car[1]} مقابل ${formatNumber(car[5],0)}$ (${formatNumber(profit,0)}$ ربح صافي). المبلغ في البنك المركزي.`);
+                 uUI();
+             }
+        };
+        window.rejectOffer=id=>{
+             const carIndex=S.cOwned.findIndex(c=>c[0]===id&&c[5]>0);
+             if(carIndex!==-1){const car=S.cOwned[carIndex];car[5]=0;car[4]--;car[3]++; 
+             if(car[4]<=0){S.cOwned.splice(carIndex,1);addMailMessage('مصادرة سيارة', `❌ تمت مصادرة السيارة ${car[1]} لرفض العرض الأخير.`);}else{car[6]=generateNextOfferTime();}uUI();}
+        };
+        window.resetCarProfit=()=>{
+             if(S.carProfit===0)return;
+             S.carProfit=0;
+             alert('✅ تم إعادة تعيين عداد أرباح السيارات.');
+             uUI();
+        };
+        window.toggleAdmin=()=>{
+             const pass=$('adminPass').value;
+             if(pass===S.adminPass){S.admin=!S.admin;$('adminControls').classList.toggle('hidden',!S.admin);$('adminBtn').textContent=S.admin?'خروج':'دخول';alert(S.admin?'وضع الأدمن مفعل.':'تم الخروج من وضع الأدمن.');}
+             else{alert('كلمة السر غير صحيحة.');}
+        };
+        window.applyCheat=type=>{
+             if(!S.admin)return;const amount=parseFloat($('cheatAmount').value);
+             if(isNaN(amount)||amount<=0)return;
+             if(type==='money'){S.m+=amount;alert(`تم إضافة ${amount}$ رصيد.`);}
+             if(type==='points'){S.p+=amount;alert(`تم إضافة ${amount} نقطة.`);}
+             uUI();
+        };
+        window.checkAndClaimAchievement=id=>{
+             const ach=ACHIEVEMENTS.find(a=>a.id===id);
+             if(ach&&!S.achievements[id]&&ach.check()){S.achievements[id]=!0;S.m+=ach.reward;}
+             else if(S.achievements[id]){alert('✅ تم استلام هذا الإنجاز مسبقاً.');}
+             else{alert('❌ لم يتم استيفاء شروط هذا الإنجاز بعد.');}uUI();
+        };
+        window.transferMoney=transferMoney;window.plantSeeds=plantSeeds;window.harvest=harvest;
+
+        document.addEventListener('DOMContentLoaded',()=>{
+             const initialViewsToHide=['view-game','view-car','view-estate','view-achievements','view-bank','view-farm','view-phones','view-black-market'];
+             initialViewsToHide.forEach(id=>{const el=$(id);if(el)el.classList.add('hidden');});
+             $('view-home').classList.remove('hidden');
+            S.flashSale.nextMinute=Math.floor(Math.random()*(FLASH_SALE_MAX_WAIT-FLASH_SALE_MIN_WAIT+1))+FLASH_SALE_MIN_WAIT; 
+            uUI();
+        });
+        setInterval(gameTick,1e3); 
+        setInterval(minuteTick,6e4);
+    </script>
+</body>
+</html>
