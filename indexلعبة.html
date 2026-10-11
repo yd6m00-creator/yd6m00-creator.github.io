@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Match Engine Pro V13 — Gemini + Real Stats</title>
+<style>
+  :root{--bg:#070b14;--panel:#0f1729;--panel2:#141f38;--border:#1e2d4a;
+    --text:#e6eefc;--muted:#7a8fb0;--accent:#10b981;--accent2:#3b82f6;
+    --danger:#ef4444;--warn:#f59e0b;--ai:#a855f7;--radius:14px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1400px 700px at 50% -20%,#0f1f3a 0%,var(--bg) 65%);
+    color:var(--text);font-family:"Segoe UI",Tahoma,system-ui,sans-serif;
+    min-height:100vh;padding:12px;line-height:1.6}
+  .container{max-width:1100px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    flex-wrap:wrap;margin-bottom:12px;padding:14px 18px;
+    background:linear-gradient(135deg,#0f1729,#141f38);
+    border:1px solid var(--border);border-radius:var(--radius)}
+  header h1{font-size:1.05rem;display:flex;align-items:center;gap:8px}
+  .badge{display:inline-block;font-size:.68rem;padding:4px 10px;border-radius:20px;
+    background:rgba(16,185,129,.15);color:var(--accent);border:1px solid rgba(16,185,129,.3)}
+  .badge.err{background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)}
+  .badge.load{background:rgba(245,158,11,.15);color:var(--warn);border-color:rgba(245,158,11,.3)}
+  .card{background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px;margin-bottom:12px}
+  .card h2{font-size:.85rem;color:var(--muted);margin-bottom:12px;
+    text-transform:uppercase;letter-spacing:.8px}
+  .league-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .league-tab{padding:6px 12px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel2);color:var(--muted);cursor:pointer;font-size:.78rem;transition:.2s}
+  .league-tab.active{background:var(--accent);color:#052e16;border-color:var(--accent);font-weight:700}
+  .btn{padding:10px 16px;border-radius:10px;border:none;cursor:pointer;
+    font-size:.85rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:.2s}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn-primary{background:var(--accent);color:#052e16}
+  .btn-secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+  .btn-ai{background:linear-gradient(135deg,var(--ai),var(--accent2));color:#fff}
+  .btn-danger{background:var(--danger);color:#fff}
+  .search-box{display:flex;gap:8px;margin-bottom:10px}
+  .search-box input{flex:1;padding:11px 14px;border-radius:10px;
+    border:1px solid var(--border);background:var(--panel2);color:var(--text);
+    font-size:.9rem;outline:none}
+  .search-box input:focus{border-color:var(--accent2)}
+  .match-item{display:flex;align-items:center;justify-content:space-between;
+    padding:12px 14px;background:var(--panel2);border-radius:10px;
+    border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:.2s}
+  .match-item:hover{border-color:var(--accent2);background:#1a2a4a}
+  .match-item.live{border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.05)}
+  .match-teams{flex:1;min-width:0}
+  .match-teams .team{display:flex;align-items:center;gap:6px;font-size:.85rem}
+  .match-teams .team .logo{width:20px;height:20px;object-fit:contain}
+  .match-score{font-size:1.3rem;font-weight:800;min-width:60px;text-align:center}
+  .match-status{font-size:.72rem;color:var(--muted);text-align:center;min-width:70px}
+  .match-status.live{color:var(--accent);font-weight:700}
+  .tabs{display:flex;gap:4px;margin:12px 0;flex-wrap:wrap}
+  .tab{padding:8px 14px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel2);color:var(--muted);cursor:pointer;font-size:.8rem;transition:.2s}
+  .tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+  .tab.tab-sim.active{background:linear-gradient(135deg,var(--warn),var(--danger));color:#fff}
+  .stat-row{display:flex;justify-content:space-between;padding:9px 12px;
+    background:var(--panel2);border-radius:8px;border:1px solid var(--border);
+    font-size:.84rem;margin-bottom:4px;gap:8px}
+  .stat-row .label{color:var(--muted);flex:1}
+  .stat-row .val{font-weight:700;text-align:left;white-space:nowrap}
+  .bar-row{margin-bottom:10px}
+  .bar-label{display:flex;justify-content:space-between;font-size:.78rem;
+    color:var(--muted);margin-bottom:3px}
+  .bar-bg{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;display:flex}
+  .bar-home{background:var(--accent);height:100%;transition:width .5s}
+  .bar-away{background:var(--accent2);height:100%;transition:width .5s}
+  .confidence-box{padding:14px;border-radius:12px;text-align:center;
+    margin-bottom:12px;font-weight:700;font-size:1rem}
+  .conf-excellent{background:rgba(16,185,129,.15);border:2px solid var(--accent);color:var(--accent)}
+  .conf-moderate{background:rgba(245,158,11,.15);border:2px solid var(--warn);color:var(--warn)}
+  .conf-unclear{background:rgba(239,68,68,.15);border:2px solid var(--danger);color:var(--danger)}
+  .confidence-box .sub{font-size:.75rem;font-weight:400;opacity:.9;margin-top:4px}
+  .ai-panel{background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(59,130,246,.08));
+    border:1px solid var(--ai);border-radius:12px;padding:14px;margin-bottom:12px}
+  .ai-panel .ai-title{display:flex;align-items:center;gap:6px;
+    font-size:.85rem;font-weight:700;color:var(--ai);margin-bottom:10px}
+  .sim-event{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;
+    border-radius:8px;margin-bottom:5px;background:var(--panel2);
+    border:1px solid transparent;font-size:.82rem;animation:fadeIn .3s}
+  @keyframes fadeIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+  .sim-event .min{min-width:42px;font-weight:700;color:var(--accent);flex-shrink:0}
+  .sim-event .body{flex:1}
+  .sim-event .reason{font-size:.74rem;color:#c8d5f0;margin-top:3px;line-height:1.5}
+  .sim-event .factors{font-size:.7rem;color:var(--muted);margin-top:4px;
+    padding-right:8px;border-right:2px solid var(--accent2);line-height:1.5}
+  .sim-event .factors div{margin-bottom:1px}
+  .sim-event.goal{border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.1)}
+  .sim-event.card-y{border-color:rgba(245,158,11,.3)}
+  .sim-event.card-r{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.08)}
+  .sim-event.shot{border-color:rgba(59,130,246,.3)}
+  .sim-event.foul{border-color:rgba(168,85,247,.25)}
+  .sim-event.corner{border-color:rgba(245,158,11,.2)}
+  .sim-event.info{opacity:.75}
+  .sim-controls{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  .sim-controls .btn{padding:7px 12px;font-size:.78rem}
+  .empty{text-align:center;color:var(--muted);padding:18px;font-size:.85rem}
+  .hidden{display:none!important}
+  .loading-spinner{display:inline-block;width:14px;height:14px;
+    border:2px solid var(--border);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--panel);border:1px solid var(--accent);color:var(--text);
+    padding:10px 20px;border-radius:10px;font-size:.85rem;z-index:9999;
+    opacity:0;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.5);
+    max-width:90%;text-align:center}
+  .toast.show{opacity:1}
+  .toast.error{border-color:var(--danger)}
+  .toast.warn{border-color:var(--warn)}
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .stats-section{margin-bottom:14px}
+  .stats-section h4{font-size:.75rem;color:var(--accent2);margin-bottom:6px;
+    text-transform:uppercase;letter-spacing:.6px;
+    padding-bottom:4px;border-bottom:1px solid var(--border)}
+
+  /* ===== AI Chat ===== */
+  .ai-chat-btn{position:fixed;bottom:20px;left:20px;width:56px;height:56px;
+    border-radius:50%;background:linear-gradient(135deg,var(--ai),var(--accent2));
+    color:#fff;border:none;font-size:1.6rem;cursor:pointer;z-index:998;
+    box-shadow:0 4px 20px rgba(168,85,247,.5);transition:.2s;
+    display:flex;align-items:center;justify-content:center}
+  .ai-chat-btn:hover{transform:scale(1.08)}
+  .ai-chat-btn.pulse{animation:chatPulse 2s infinite}
+  @keyframes chatPulse{0%,100%{box-shadow:0 4px 20px rgba(168,85,247,.5)}
+    50%{box-shadow:0 4px 30px rgba(168,85,247,.9)}}
+  .ai-chat-panel{position:fixed;bottom:88px;left:20px;width:92%;max-width:420px;
+    height:72vh;max-height:600px;background:var(--panel);
+    border:1px solid var(--ai);border-radius:16px;z-index:999;
+    display:flex;flex-direction:column;overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,0,.7);animation:chatSlide .3s}
+  @keyframes chatSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  .chat-header{display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(59,130,246,.2));
+    border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem}
+  .chat-header .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:var(--accent);margin-left:6px;animation:blink 1.5s infinite}
+  @keyframes blink{50%{opacity:.3}}
+  .chat-close{background:transparent;border:none;color:var(--muted);
+    font-size:1.2rem;cursor:pointer;padding:4px 8px}
+  .chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;
+    flex-direction:column;gap:8px}
+  .chat-msg{max-width:85%;padding:10px 14px;border-radius:14px;
+    font-size:.84rem;line-height:1.6;word-wrap:break-word;animation:fadeIn .3s}
+  .chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--ai),var(--accent2));
+    color:#fff;border-bottom-left-radius:4px}
+  .chat-msg.ai{align-self:flex-start;background:var(--panel2);
+    border:1px solid var(--border);color:var(--text);border-bottom-right-radius:4px}
+  .chat-msg.ai .typing{display:inline-flex;gap:3px;margin-right:6px}
+  .chat-msg.ai .typing span{width:6px;height:6px;border-radius:50%;
+    background:var(--ai);animation:typeBounce 1.4s infinite}
+  .chat-msg.ai .typing span:nth-child(2){animation-delay:.2s}
+  .chat-msg.ai .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes typeBounce{0%,60%,100%{transform:translateY(0);opacity:.5}
+    30%{transform:translateY(-6px);opacity:1}}
+  .chat-suggestions{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;
+    border-top:1px solid var(--border);max-height:120px;overflow-y:auto}
+  .chat-chip{font-size:.72rem;padding:6px 10px;border-radius:14px;
+    border:1px solid var(--ai);background:rgba(168,85,247,.1);
+    color:#d0defc;cursor:pointer;transition:.2s;white-space:nowrap}
+  .chat-chip:hover{background:rgba(168,85,247,.25);transform:translateY(-1px)}
+  .chat-input-wrap{display:flex;gap:6px;padding:10px 12px;
+    border-top:1px solid var(--border);background:var(--panel2)}
+  .chat-input-wrap input{flex:1;padding:9px 12px;border-radius:10px;
+    border:1px solid var(--border);background:var(--panel);color:var(--text);
+    font-size:.85rem;outline:none;font-family:inherit}
+  .chat-input-wrap input:focus{border-color:var(--ai)}
+  .chat-input-wrap button{padding:9px 14px;border-radius:10px;border:none;
+    background:linear-gradient(135deg,var(--ai),var(--accent2));
+    color:#fff;cursor:pointer;font-weight:700;font-size:.95rem}
+  .chat-input-wrap button:disabled{opacity:.4;cursor:not-allowed}
+  .chat-welcome{text-align:center;color:var(--muted);
+    font-size:.78rem;padding:20px 10px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>⚽ <span>Match Engine Pro V13</span></h1>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <span class="badge" id="api-status">🌐 ESPN</span>
+      <span class="badge" id="ai-status-badge">🤖 Gemini</span>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>🔍 البحث عن فريق</h2>
+    <div class="search-box">
+      <input type="text" id="team-search" placeholder="مثال: Real Madrid, Barcelona..."
+        onkeypress="if(event.key==='Enter')searchTeam()">
+      <button class="btn btn-primary" onclick="searchTeam()">بحث</button>
+    </div>
+    <div id="team-results"></div>
+  </div>
+
+  <div class="card">
+    <h2>🏆 الدوريات</h2>
+    <div class="league-tabs" id="league-tabs"></div>
+    <button class="btn btn-primary" onclick="loadLeague()" style="width:100%;justify-content:center;">
+      🔄 تحميل / تحديث
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>📡 المباريات</h2>
+    <div id="matches"><div class="empty">اختر دوري ثم اضغط "تحميل"</div></div>
+  </div>
+
+  <div class="card hidden" id="match-card">
+    <h2>⚔️ تفاصيل المباراة</h2>
+    <div id="match-header"></div>
+    <div id="confidence-wrap"></div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="stats" onclick="showTab('stats')">📊 إحصائيات</button>
+      <button class="tab" data-tab="lineups" onclick="showTab('lineups')">👥 تشكيلات</button>
+      <button class="tab" data-tab="events" onclick="showTab('events')">⚡ أحداث</button>
+      <button class="tab" data-tab="h2h" onclick="showTab('h2h')">🤝 مواجهات</button>
+      <button class="tab" data-tab="betting" onclick="showTab('betting')">💰 مراهنات</button>
+      <button class="tab tab-sim" data-tab="simulate" onclick="showTab('simulate')">🎯 المحاكي</button>
+    </div>
+    <div id="tab-content"></div>
+  </div>
+
+  <div class="card hidden" id="simulator-card">
+    <h2>🎯 محاكاة المباراة — تحليل حقيقي</h2>
+    <div id="simulator-content"></div>
+  </div>
+
+</div>
+
+<!-- AI Chat Button -->
+<button class="ai-chat-btn pulse" id="ai-chat-btn" onclick="toggleChat()" title="مساعد AI">💬</button>
+
+<!-- AI Chat Panel -->
+<div class="ai-chat-panel hidden" id="ai-chat-panel">
+  <div class="chat-header">
+    <span>🤖 مساعد المباراة <span class="dot"></span></span>
+    <button class="chat-close" onclick="toggleChat()">✖</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-welcome">
+      👋 مرحباً! أنا مساعدك الذكي.<br>
+      اختر مباراة ثم اسألني أي شيء عنها<br>
+      <span style="font-size:.7rem;color:var(--accent)">💡 مدعوم بـ Gemini 2.0</span>
+    </div>
+  </div>
+  <div class="chat-suggestions" id="chat-suggestions"></div>
+  <div class="chat-input-wrap">
+    <input type="text" id="chat-input" placeholder="اسأل عن المباراة..."
+      onkeypress="if(event.key==='Enter')sendChat()">
+    <button id="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================
+   Match Engine Pro V13 — V12 Stats + Gemini AI Chat
+   ========================================================== */
+
+// 🔑 المفاتيح
+const GEMINI_KEY = "AQ.Ab8RN6ICNyJf80455GIClwhxvPPgfCuPJ-K7IXUoaxm0z8xO4A";
+const GROQ_KEY = "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";
+
+// 🌐 Endpoints
+const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"];
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+const CORS_PROXIES = [
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?url=",
+  "https://api.codetabs.com/v1/proxy?quest="
+];
+
+const LEAGUES = [
+  { id: "eng.1",          name: "🏴 Premier League" },
+  { id: "esp.1",          name: "🇪🇸 La Liga" },
+  { id: "ita.1",          name: "🇮🇹 Serie A" },
+  { id: "ger.1",          name: "🇩🇪 Bundesliga" },
+  { id: "fra.1",          name: "🇫🇷 Ligue 1" },
+  { id: "por.1",          name: "🇵🇹 Primeira" },
+  { id: "ned.1",          name: "🇳🇱 Eredivisie" },
+  { id: "uefa.champions", name: "🏆 الأبطال" },
+  { id: "uefa.europa",    name: "🥈 الأوروبي" },
+  { id: "ksa.1",          name: "🇸🇦 السعودي" },
+  { id: "usa.1",          name: "🇺🇸 MLS" }
+];
+
+const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer";
+
+let currentLeague = "eng.1";
+let currentMatch = null;
+let currentTab = "stats";
+let simPaused = false;
+let simSpeed = 500;
+
+/* ===== Helpers ===== */
+function showToast(m, t = "success") {
+  const el = document.getElementById("toast");
+  el.textContent = m;
+  el.className = "toast show " + t;
+  setTimeout(() => el.classList.remove("show"), 3000);
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function setStatus(text, cls) {
+  const el = document.getElementById("api-status");
+  el.textContent = text;
+  el.className = "badge " + (cls || "");
+}
+
+async function fetchJSON(url, timeout = 12000) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
+  } catch (e) { clearTimeout(tid); throw e; }
+}
+
+/* ==========================================================
+   🤖 AI Brain — Gemini أولاً، ثم Groq، ثم Pollinations، ثم محلي
+   ========================================================== */
+
+async function callGemini(systemPrompt, userMessage) {
+  const payload = {
+    contents: [{
+      role: "user",
+      parts: [{ text: systemPrompt + "\n\n" + userMessage }]
+    }],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 900,
+      topP: 0.95
+    }
+  };
+  const bodyStr = JSON.stringify(payload);
+
+  // جرّب كل موديل + كل طريقة
+  for (const model of GEMINI_MODELS) {
+    const url = `${GEMINI_BASE}/${model}:generateContent?key=${GEMINI_KEY}`;
+
+    // 1) مباشر
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: bodyStr
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (txt && txt.trim().length > 0) return txt.trim();
+      } else {
+        const errText = await r.text();
+        console.warn(`Gemini ${model} direct HTTP ${r.status}:`, errText.slice(0, 200));
+      }
+    } catch (e) { console.warn(`Gemini ${model} direct:`, e.message); }
+
+    // 2) عبر Proxy
+    for (const proxy of CORS_PROXIES) {
+      try {
+        const r = await fetch(proxy + encodeURIComponent(url), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: bodyStr
+        });
+        if (r.ok) {
+          const text = await r.text();
+          try {
+            const data = JSON.parse(text);
+            const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (txt && txt.trim().length > 0) return txt.trim();
+          } catch (pe) {}
+        }
+      } catch (e) { continue; }
+    }
+
+    // 3) جرّب Bearer
+    try {
+      const r = await fetch(`${GEMINI_BASE}/${model}:generateContent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GEMINI_KEY}`
+        },
+        body: bodyStr
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (txt && txt.trim().length > 0) return txt.trim();
+      }
+    } catch (e) {}
+  }
+  throw new Error("فشل Gemini بكل الطرق");
+}
+
+async function callGroq(systemPrompt, userMessage) {
+  const r = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + GROQ_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage }
+      ],
+      temperature: 0.7,
+      max_tokens: 900
+    })
+  });
+  if (!r.ok) throw new Error("Groq HTTP " + r.status);
+  const data = await r.json();
+  const txt = data.choices?.[0]?.message?.content;
+  if (!txt || txt.trim().length < 3) throw new Error("رد فارغ");
+  return txt.trim();
+}
+
+async function callPollinations(systemPrompt, userMessage) {
+  const r = await fetch("https://text.pollinations.ai/openai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "mistral",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage }
+      ],
+      referrer: "match-engine-v13"
+    })
+  });
+  if (!r.ok) throw new Error("Pollinations HTTP " + r.status);
+  const data = await r.json();
+  const txt = data.choices?.[0]?.message?.content;
+  if (!txt || txt.trim().length < 3) throw new Error("رد فارغ");
+  return txt.trim();
+}
+
+function callLocal(question) {
+  return localAnswer(question);
+}
+
+async function askAI(systemPrompt, userMessage) {
+  // 1) Gemini
+  try {
+    const text = await callGemini(systemPrompt, userMessage);
+    return { text, source: "gemini" };
+  } catch (e) { console.warn("Gemini فشل:", e.message); }
+
+  // 2) Groq
+  try {
+    const text = await callGroq(systemPrompt, userMessage);
+    return { text, source: "groq" };
+  } catch (e) { console.warn("Groq فشل:", e.message); }
+
+  // 3) Pollinations
+  try {
+    const text = await callPollinations(systemPrompt, userMessage);
+    return { text, source: "pollinations" };
+  } catch (e) { console.warn("Pollinations فشل:", e.message); }
+
+  // 4) محلي
+  return { text: callLocal(userMessage), source: "local" };
+}
+
+/* ==========================================================
+   🤖 AI Chat UI
+   ========================================================== */
+
+let chatHistory = [];
+let chatOpen = false;
+let chatBusy = false;
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById("ai-chat-panel").classList.toggle("hidden", !chatOpen);
+  if (chatOpen) {
+    document.getElementById("ai-chat-btn").classList.remove("pulse");
+    setTimeout(() => document.getElementById("chat-input").focus(), 100);
+    updateSuggestions();
+  }
+}
+
+function buildMatchContext() {
+  if (!currentMatch || !currentMatch.analysis) {
+    return "⚠️ لم يتم اختيار مباراة. اطلب من المستخدم اختيار مباراة أولاً.";
+  }
+  const m = currentMatch;
+  const a = m.analysis;
+  const H = a.homeData, A = a.awayData;
+  let ctx = `=== المباراة ===\n`;
+  ctx += `${H.name} (المضيف${m.home.record ? ` - ${m.home.record}` : ""}) ضد ${A.name} (الضيف${m.away.record ? ` - ${m.away.record}` : ""})\n`;
+  ctx += `النتيجة: ${m.home.score} - ${m.away.score}\n`;
+  ctx += `الحالة: ${(m.status.type && m.status.type.description) || ""} | الدقيقة ${a.minute}\n\n`;
+  ctx += `=== الإحصائيات ===\n`;
+  ctx += `الاستحواذ: ${H.possession}% - ${A.possession}%\n`;
+  ctx += `التسديدات: ${H.shots} - ${A.shots} (على المرمى: ${H.sot} - ${A.sot})\n`;
+  ctx += `الركنيات: ${H.corners} - ${A.corners}\n`;
+  ctx += `الأخطاء: ${H.fouls} - ${A.fouls}\n`;
+  ctx += `صفراء: ${H.yellow} - ${A.yellow} | حمراء: ${H.red} - ${A.red}\n\n`;
+  ctx += `=== التحليل ===\n`;
+  ctx += `القوة: ${H.strength.toFixed(1)} - ${A.strength.toFixed(1)}\n`;
+  ctx += `xG: ${(a.xg.home * 90).toFixed(2)} - ${(a.xg.away * 90).toFixed(2)}\n`;
+  const wn = a.prediction.winner === "home" ? H.name : a.prediction.winner === "away" ? A.name : "تعادل";
+  ctx += `الفائز المتوقع: ${wn} | النتيجة المتوقعة: ${a.prediction.expectedScore}\n`;
+  ctx += `الاحتمالات: فوز ${H.name} ${a.prediction.homeProb}% | تعادل ${a.prediction.drawProb}% | فوز ${A.name} ${a.prediction.awayProb}%\n\n`;
+  const events = m.events || [];
+  if (events.length) {
+    ctx += `=== آخر الأحداث (${events.length}) ===\n`;
+    events.slice(-15).forEach(e => {
+      const t = { goal: "⚽ هدف", yellow: "🟨 صفراء", red: "🟥 حمراء", sub: "🔄 تبديل", shot: "🎯 تسديدة", "shot-on-target": "🎯 على المرمى", foul: "⚠️ خطأ", corner: "🚩 ركنية" }[e.type] || e.type;
+      ctx += `${e.minute}' ${t}${e.player ? ` — ${e.player}` : ""}${e.team ? ` (${e.team})` : ""}\n`;
+    });
+  }
+  return ctx;
+}
+
+function updateSuggestions() {
+  const el = document.getElementById("chat-suggestions");
+  if (!currentMatch) {
+    el.innerHTML = `<button class="chat-chip" onclick="sendChat('ما هي وظيفتك؟')">ما هي وظيفتك؟</button>
+      <button class="chat-chip" onclick="sendChat('كيف أستخدمك؟')">كيف أستخدمك؟</button>`;
+    return;
+  }
+  const H = currentMatch.analysis.homeData.name;
+  const A = currentMatch.analysis.awayData.name;
+  const sugs = [
+    "من سيفوز ولماذا؟",
+    `حلل نقاط ضعف ${H} و ${A}`,
+    "ما أهم عامل مؤثر؟",
+    "توقع النتيجة النهائية",
+    "هل يستحق التوقع؟",
+    "لخّص المباراة"
+  ];
+  el.innerHTML = sugs.map(s => `<button class="chat-chip">${esc(s)}</button>`).join("");
+  el.querySelectorAll(".chat-chip").forEach((btn, i) => { btn.onclick = () => sendChat(sugs[i]); });
+}
+
+function addChatMsg(role, content, id) {
+  const msgs = document.getElementById("chat-messages");
+  const div = document.createElement("div");
+  div.className = "chat-msg " + role;
+  if (id) div.id = id;
+  div.innerHTML = content;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function resetChatForMatch() {
+  chatHistory = [];
+  const msgs = document.getElementById("chat-messages");
+  if (msgs && currentMatch) {
+    msgs.innerHTML = `<div class="chat-welcome">
+      ✅ المباراة محمّلة!<br>
+      اسألني أي شيء عن <b>${esc(currentMatch.home.short || currentMatch.home.name)}</b> ضد <b>${esc(currentMatch.away.short || currentMatch.away.name)}</b>
+    </div>`;
+  }
+  if (chatOpen) updateSuggestions();
+}
+
+async function sendChat(presetText) {
+  if (chatBusy) return;
+  const input = document.getElementById("chat-input");
+  const q = presetText || (input && input.value.trim());
+  if (!q) return;
+  if (input) input.value = "";
+
+  const w = document.querySelector(".chat-welcome");
+  if (w) w.remove();
+
+  addChatMsg("user", esc(q));
+  const loadId = "chat-load-" + Date.now();
+  addChatMsg("ai", `<span class="typing"><span></span><span></span><span></span></span> يفكر...`, loadId);
+
+  chatBusy = true;
+  document.getElementById("chat-send").disabled = true;
+
+  try {
+    const context = buildMatchContext();
+    const sysPrompt = `أنت "Match AI" — محلل كرة قدم خبير يتحدث العربية بطلاقة.
+لديك البيانات الحقيقية التالية عن المباراة:
+
+${context}
+
+قواعد صارمة:
+- أجب بالعربية الفصحى المبسطة
+- كن مختصراً (2-5 أسطر)
+- استخدم الأرقام والإحصائيات أعلاه
+- لا تخترع معلومات
+- إذا سُئلت عن توقع، اذكر السبب والأرقام
+- إذا لم تُختر مباراة، اطلب اختيارها`;
+
+    const result = await askAI(sysPrompt, q);
+
+    const loadEl = document.getElementById(loadId);
+    if (loadEl) {
+      const badge = result.source === "gemini" ? "🟢 Gemini" :
+                    result.source === "groq" ? "⚡ Groq" :
+                    result.source === "pollinations" ? "🟠 Pollinations" : "🔴 محلي";
+      loadEl.innerHTML = esc(result.text).replace(/\n/g, "<br>") +
+        `<div style="font-size:.62rem;color:var(--muted);margin-top:6px;opacity:.7">${badge}</div>`;
+      loadEl.removeAttribute("id");
+    }
+
+    chatHistory.push({ role: "user", content: q });
+    chatHistory.push({ role: "assistant", content: result.text });
+    if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+  } catch (e) {
+    const loadEl = document.getElementById(loadId);
+    if (loadEl) { loadEl.innerHTML = `⚠️ ${esc(e.message)}`; loadEl.removeAttribute("id"); }
+  } finally {
+    chatBusy = false;
+    document.getElementById("chat-send").disabled = false;
+  }
+}
+
+function localAnswer(question) {
+  const q = question.toLowerCase();
+  if (!currentMatch || !currentMatch.analysis) return "الرجاء اختيار مباراة أولاً.";
+  const m = currentMatch;
+  const a = m.analysis;
+  const H = a.homeData, A = a.awayData;
+
+  if (q.includes("سيفوز") || q.includes("الفائز") || q.includes("توقع")) {
+    const w = a.prediction.winner === "home" ? H.name : a.prediction.winner === "away" ? A.name : "تعادل";
+    const p = a.prediction.winner === "home" ? a.prediction.homeProb : a.prediction.winner === "away" ? a.prediction.awayProb : a.prediction.drawProb;
+    return `📊 التوقع: ${w} بنسبة ${p}%.\n\n🔑 الأسباب:\n• القوة: ${H.strength.toFixed(1)} - ${A.strength.toFixed(1)}\n• xG: ${(a.xg.home*90).toFixed(2)} - ${(a.xg.away*90).toFixed(2)}\n• النتيجة المتوقعة: ${a.prediction.expectedScore}`;
+  }
+  if (q.includes("ضعف")) {
+    const weak = H.strength < A.strength ? H : A;
+    const strong = H.strength > A.strength ? H : A;
+    return `نقاط ضعف ${weak.name}:\n• تسديدات: ${weak.shots} مقابل ${strong.shots}\n• استحواذ: ${weak.possession}%\n• قوة: أقل بـ ${Math.abs(a.strengthGap).toFixed(1)} نقطة`;
+  }
+  if (q.includes("لخص") || q.includes("ملخص")) {
+    return `⚔️ ${H.name} ${m.home.score}-${m.away.score} ${A.name}\n📊 الاستحواذ: ${H.possession}% - ${A.possession}%\n🎯 التسديدات: ${H.shots} - ${A.shots}\n📈 النتيجة المتوقعة: ${a.prediction.expectedScore}`;
+  }
+  if (q.includes("يستحق")) {
+    const conf = classifyMatch(a);
+    return `${conf.label}\n${conf.sub}`;
+  }
+  if (q.includes("وظيفتك") || q.includes("من أنت")) {
+    return "أنا Match AI — محلل مباريات يعتمد على Gemini 2.0 + Groq + Pollinations + محلي. أجيبك عن أي شيء يخص المباراة المختارة.";
+  }
+  if (q.includes("أستخدمك") || q.includes("كيف")) {
+    return "1) اختر دوري من الأعلى\n2) اضغط مباراة\n3) اسألني أو شغّل المحاكي 🎯";
+  }
+  return `📊 ${H.name} ${m.home.score}-${m.away.score} ${A.name}\nالقوة: ${H.strength.toFixed(1)} - ${A.strength.toFixed(1)}\nالتوقع: ${a.prediction.expectedScore}`;
+}
+
+/* ===== League Tabs ===== */
+function renderLeagueTabs() {
+  document.getElementById("league-tabs").innerHTML = LEAGUES.map(l =>
+    `<div class="league-tab ${l.id === currentLeague ? 'active' : ''}" onclick="selectLeague('${l.id}')">${l.name}</div>`
+  ).join("");
+}
+function selectLeague(id) {
+  currentLeague = id;
+  renderLeagueTabs();
+  loadLeague();
+}
+
+async function init() {
+  renderLeagueTabs();
+  updateSuggestions();
+  setStatus("🔌 فحص الاتصال...", "load");
+  try {
+    await fetchJSON(`${ESPN_BASE}/eng.1/scoreboard`, 8000);
+    setStatus("✅ متصل بـ ESPN", "");
+    document.getElementById("ai-status-badge").textContent = "🤖 Gemini";
+    loadLeague();
+  } catch (e) {
+    setStatus("❌ لا اتصال", "err");
+    document.getElementById("matches").innerHTML =
+      `<div class="empty">⚠️ فشل الاتصال<br>
+       <button class="btn btn-secondary" onclick="init()" style="margin-top:8px;">🔄 إعادة</button></div>`;
+  }
+}
+
+async function loadLeague() {
+  const el = document.getElementById("matches");
+  el.innerHTML = '<div class="empty"><span class="loading-spinner"></span> جاري التحميل...</div>';
+  setStatus("⏳ تحميل...", "load");
+  try {
+    const data = await fetchJSON(`${ESPN_BASE}/${currentLeague}/scoreboard`);
+    const events = data.events || [];
+    if (!events.length) {
+      el.innerHTML = '<div class="empty">لا توجد مباريات اليوم</div>';
+      setStatus("📭 لا مباريات", "load");
+      return;
+    }
+    el.innerHTML = events.map(m => renderMatchItem(m)).join("");
+    setStatus(`✅ ${events.length} مباراة`, "");
+  } catch (e) {
+    el.innerHTML = `<div class="empty">⚠️ فشل<br><span style="font-size:.75rem">${esc(e.message)}</span></div>`;
+    setStatus("❌ فشل", "err");
+  }
+}
+
+function renderMatchItem(m) {
+  const comp = (m.competitions && m.competitions[0]) || {};
+  const cs = comp.competitors || [];
+  const home = cs.find(c => c.homeAway === "home") || {};
+  const away = cs.find(c => c.homeAway === "away") || {};
+  const st = comp.status || m.status || {};
+  const type = st.type || {};
+  const isLive = type.state === "in";
+  const isFinal = type.state === "post";
+  let statusText = "";
+  if (isLive) statusText = `🔴 ${st.displayClock || ""} ش${st.period || 1}`;
+  else if (isFinal) statusText = "انتهت";
+  else statusText = new Date(m.date).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+  const homeName = (home.team && (home.team.shortDisplayName || home.team.displayName)) || "?";
+  const awayName = (away.team && (away.team.shortDisplayName || away.team.displayName)) || "?";
+  const homeLogo = (home.team && home.team.logo) || "";
+  const awayLogo = (away.team && away.team.logo) || "";
+
+  return `<div class="match-item ${isLive ? 'live' : ''}" onclick="loadMatch('${esc(m.id)}')">
+    <div class="match-teams">
+      <div class="team"><img class="logo" src="${esc(homeLogo)}" onerror="this.style.display='none'"> ${esc(homeName)}</div>
+      <div class="team"><img class="logo" src="${esc(awayLogo)}" onerror="this.style.display='none'"> ${esc(awayName)}</div>
+    </div>
+    <div class="match-score">${esc(home.score || "0")} - ${esc(away.score || "0")}</div>
+    <div class="match-status ${isLive ? 'live' : ''}">${statusText}</div>
+  </div>`;
+}
+
+async function loadMatch(eventId) {
+  const card = document.getElementById("match-card");
+  card.classList.remove("hidden");
+  document.getElementById("match-header").innerHTML = '<div class="empty"><span class="loading-spinner"></span> تحميل...</div>';
+  document.getElementById("tab-content").innerHTML = "";
+  document.getElementById("confidence-wrap").innerHTML = "";
+  card.scrollIntoView({ behavior: "smooth" });
+
+  try {
+    const data = await fetchJSON(`${ESPN_BASE}/${currentLeague}/summary?event=${eventId}`);
+    const header = data.header || {};
+    const comp = (header.competitions && header.competitions[0]) || {};
+    const cs = comp.competitors || [];
+    const hc = cs.find(c => c.homeAway === "home") || {};
+    const ac = cs.find(c => c.homeAway === "away") || {};
+
+    const boxscore = data.boxscore || {};
+    const teams = boxscore.teams || [];
+    const hTeam = teams.find(t => t.homeAway === "home") || {};
+    const aTeam = teams.find(t => t.homeAway === "away") || {};
+
+    currentMatch = {
+      eventId,
+      rawData: data,
+      home: {
+        id: hc.team && hc.team.id,
+        name: hc.team && (hc.team.displayName || hc.team.name),
+        short: hc.team && (hc.team.shortDisplayName || hc.team.name),
+        logo: hc.team && hc.team.logo,
+        score: parseInt(hc.score) || 0,
+        stats: parseStats(hTeam.statistics || []),
+        rawStats: hTeam.statistics || [],
+        record: hc.records && hc.records[0] && hc.records[0].summary
+      },
+      away: {
+        id: ac.team && ac.team.id,
+        name: ac.team && (ac.team.displayName || ac.team.name),
+        short: ac.team && (ac.team.shortDisplayName || ac.team.name),
+        logo: ac.team && ac.team.logo,
+        score: parseInt(ac.score) || 0,
+        stats: parseStats(aTeam.statistics || []),
+        rawStats: aTeam.statistics || [],
+        record: ac.records && ac.records[0] && ac.records[0].summary
+      },
+      status: comp.status || {},
+      rosters: data.rosters || [],
+      keyEvents: data.keyEvents || [],
+      headToHead: data.headToHeadGames || data.seasonseries || null,
+      pickcenter: data.pickcenter || null,
+      predictor: data.predictor || null,
+      odds: (comp.odds && comp.odds[0]) || null
+    };
+
+    currentMatch.events = extractMatchEvents(data);
+    renderMatchDetail();
+  } catch (e) {
+    document.getElementById("match-header").innerHTML = `<div class="empty">⚠️ ${esc(e.message)}</div>`;
+  }
+}
+
+function parseStats(arr) {
+  const obj = {};
+  (arr || []).forEach(s => {
+    obj[s.name] = s.displayValue != null ? s.displayValue : s.value;
+  });
+  return obj;
+}
+
+function renderMatchDetail() {
+  const m = currentMatch;
+  document.getElementById("match-header").innerHTML = `
+    <div style="display:flex;justify-content:center;align-items:center;gap:16px;">
+      <div style="text-align:center;">
+        <img src="${esc(m.home.logo)}" style="width:48px;height:48px;object-fit:contain;" onerror="this.style.display='none'">
+        <div style="font-size:.82rem;font-weight:600;">${esc(m.home.short || m.home.name)}</div>
+        ${m.home.record ? `<div style="font-size:.68rem;color:var(--muted)">${esc(m.home.record)}</div>` : ""}
+      </div>
+      <div style="font-size:2rem;font-weight:800;">${m.home.score} - ${m.away.score}</div>
+      <div style="text-align:center;">
+        <img src="${esc(m.away.logo)}" style="width:48px;height:48px;object-fit:contain;" onerror="this.style.display='none'">
+        <div style="font-size:.82rem;font-weight:600;">${esc(m.away.short || m.away.name)}</div>
+        ${m.away.record ? `<div style="font-size:.68rem;color:var(--muted)">${esc(m.away.record)}</div>` : ""}
+      </div>
+    </div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:8px;text-align:center;">
+      ${esc((m.status.type && (m.status.type.description || m.status.type.detail)) || "")}
+    </div>`;
+
+  const analysis = analyzeMatch(m);
+  m.analysis = analysis;
+  const conf = classifyMatch(analysis);
+  const cls = conf.level === "excellent" ? "conf-excellent" :
+    conf.level === "unclear" ? "conf-unclear" : "conf-moderate";
+  document.getElementById("confidence-wrap").innerHTML = `
+    <div class="confidence-box ${cls}">
+      ${conf.label}
+      <div class="sub">${conf.sub}</div>
+    </div>`;
+
+  renderTabContent();
+  resetChatForMatch();
+}
+
+function gv(obj, keys) {
+  for (const k of keys) {
+    if (obj[k] != null) {
+      const v = parseFloat(String(obj[k]).replace('%', ''));
+      if (!isNaN(v)) return v;
+    }
+  }
+  return 0;
+}
+
+function analyzeMatch(m) {
+  const hs = m.home.stats || {};
+  const as = m.away.stats || {};
+  const build = (name, s, goals) => ({
+    name,
+    possession: gv(s, ["possessionPct", "possession"]),
+    shots: gv(s, ["totalShots", "shots"]),
+    sot: gv(s, ["shotsOnTarget"]),
+    shotsOff: gv(s, ["shotsOffTarget"]),
+    blocked: gv(s, ["blockedShots"]),
+    corners: gv(s, ["wonCorners", "corners"]),
+    fouls: gv(s, ["foulsCommitted", "fouls"]),
+    yellow: gv(s, ["yellowCards"]),
+    red: gv(s, ["redCards"]),
+    saves: gv(s, ["saves"]),
+    offsides: gv(s, ["offsides"]),
+    passAcc: gv(s, ["accuratePasses", "passPct", "possessionPct"]),
+    goals
+  });
+  const homeData = build(m.home.short || m.home.name, hs, m.home.score);
+  const awayData = build(m.away.short || m.away.name, as, m.away.score);
+  homeData.strength = calcStrength(homeData);
+  awayData.strength = calcStrength(awayData);
+  const strengthGap = homeData.strength - awayData.strength;
+
+  const type = (m.status.type || {}).state || "";
+  const period = parseInt(m.status.period) || 0;
+  const clockMin = parseInt(String(m.status.displayClock || "0")) || 0;
+  let minute = 0;
+  if (type === "in") {
+    if (period === 1) minute = Math.min(45, clockMin);
+    else if (period === 2) minute = Math.min(90, 45 + clockMin);
+    else minute = Math.min(90, clockMin);
+  } else if (type === "post") minute = 90;
+
+  const remaining = Math.max(1, 90 - minute);
+  const baseXg = 0.018;
+  const homeXg = Math.max(0.002, baseXg + (strengthGap / 100) * 0.020 + 0.008);
+  const awayXg = Math.max(0.002, baseXg - (strengthGap / 100) * 0.018);
+
+  let winner = "draw";
+  if (strengthGap > 8) winner = "home";
+  else if (strengthGap < -8) winner = "away";
+
+  const homeProb = Math.max(0.1, Math.min(0.85, 0.5 + strengthGap / 100));
+  const awayProb = Math.max(0.1, Math.min(0.85, 0.5 - strengthGap / 100));
+  const drawProb = Math.max(0.1, 1 - homeProb - awayProb);
+
+  const expectedHome = homeData.goals + Math.round(homeXg * remaining);
+  const expectedAway = awayData.goals + Math.round(awayXg * remaining);
+  const maxDiff = Math.min(5, Math.max(1, Math.round(Math.abs(strengthGap) / 10)));
+
+  return {
+    homeData, awayData, strengthGap,
+    xg: { home: homeXg, away: awayXg, remaining },
+    prediction: {
+      winner,
+      expectedScore: `${expectedHome} - ${expectedAway}`,
+      maxGoalDiff: maxDiff,
+      homeProb: Math.round(homeProb * 100),
+      awayProb: Math.round(awayProb * 100),
+      drawProb: Math.round(drawProb * 100)
+    },
+    minute, type
+  };
+}
+
+function calcStrength(d) {
+  const p = Math.min(100, d.possession);
+  const acc = d.shots > 0 ? (d.sot / d.shots) * 100 : 0;
+  const sv = Math.min(100, d.saves * 15);
+  const sh = Math.min(100, d.shots * 8);
+  const pa = d.passAcc || 75;
+  return (p * 0.22) + (acc * 0.25) + (sv * 0.13) + (sh * 0.15) + (pa * 0.25);
+}
+
+function classifyMatch(a) {
+  const signals = {
+    strengthClarity: Math.abs(a.strengthGap) > 18 ? 3 : Math.abs(a.strengthGap) > 10 ? 2 : 0,
+    xgClarity: Math.abs(a.xg.home - a.xg.away) > 0.015 ? 3 : Math.abs(a.xg.home - a.xg.away) > 0.008 ? 2 : 0,
+    predictionConsensus: Math.abs(a.prediction.homeProb - a.prediction.awayProb) > 30 ? 3 : 0,
+    goalsTotal: (a.homeData.goals + a.awayData.goals) >= 3 ? 2 : 0,
+    redCardClarity: (a.homeData.red + a.awayData.red) > 0 ? 2 : 0,
+    shotsClarity: Math.abs(a.homeData.shots - a.awayData.shots) > 6 ? 2 : 0
+  };
+  const total = Object.values(signals).reduce((x, y) => x + y, 0);
+  if (total >= 10) return { level: "excellent", label: "✅ إشارات واضحة", sub: "متعدد الإشارات متوافقة" };
+  if (total <= 3) return { level: "unclear", label: "❌ إشارات ضعيفة", sub: "لا يوجد وضوح كافٍ" };
+  return { level: "moderate", label: "⚠️ إشارات متوسطة", sub: "بعض الوضوح" };
+}
+
+function showTab(t) {
+  currentTab = t;
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x.dataset.tab === t));
+  if (t === "simulate") { openSimulator(); return; }
+  renderTabContent();
+}
+
+function renderTabContent() {
+  if (!currentMatch) return;
+  const m = currentMatch;
+  const el = document.getElementById("tab-content");
+
+  if (currentTab === "stats") renderStatsTab(el, m);
+  else if (currentTab === "lineups") renderLineupsTab(el, m);
+  else if (currentTab === "events") renderEventsTab(el, m);
+  else if (currentTab === "h2h") renderH2HTab(el, m);
+  else if (currentTab === "betting") renderBettingTab(el, m);
+}
+
+function renderStatsTab(el, m) {
+  const H = m.analysis.homeData, A = m.analysis.awayData;
+  const hs = m.home.stats || {};
+  const as = m.away.stats || {};
+  const getStat = (obj, ...keys) => { for (const k of keys) if (obj[k] != null) return obj[k]; return null; };
+
+  const sections = [
+    {
+      title: "🎯 الهجوم",
+      rows: [
+        ["الأهداف", H.goals, A.goals],
+        ["التسديدات الكلية", H.shots, A.shots],
+        ["على المرمى", H.sot, A.sot],
+        ["خارج المرمى", H.shotsOff, A.shotsOff],
+        ["محجوبة", H.blocked, A.blocked],
+        ["دقة التسديد", H.shots > 0 ? Math.round(H.sot / H.shots * 100) + "%" : "0%",
+                         A.shots > 0 ? Math.round(A.sot / A.shots * 100) + "%" : "0%"]
+      ]
+    },
+    {
+      title: "⚙️ السيطرة",
+      rows: [
+        ["الاستحواذ", H.possession + "%", A.possession + "%"],
+        ["إجمالي التمريرات", getStat(hs, "totalPasses") || "—", getStat(as, "totalPasses") || "—"],
+        ["تمريرات صحيحة", getStat(hs, "accuratePasses") || "—", getStat(as, "accuratePasses") || "—"],
+        ["دقة التمرير", H.passAcc ? H.passAcc.toFixed(0) + "%" : "—", A.passAcc ? A.passAcc.toFixed(0) + "%" : "—"]
+      ]
+    },
+    {
+      title: "🛡️ الدفاع",
+      rows: [
+        ["التصديات", H.saves, A.saves],
+        ["الأخطاء", H.fouls, A.fouls],
+        ["البطاقات الصفراء", H.yellow, A.yellow],
+        ["البطاقات الحمراء", H.red, A.red]
+      ]
+    },
+    {
+      title: "📐 أخرى",
+      rows: [
+        ["الركنيات", H.corners, A.corners],
+        ["التسلل", H.offsides, A.offsides],
+        ["قوة الفريق", H.strength.toFixed(1), A.strength.toFixed(1)]
+      ]
+    }
+  ];
+
+  const usedKeys = new Set(["possessionPct","totalShots","shotsOnTarget","shotsOffTarget","blockedShots","wonCorners","foulsCommitted","yellowCards","redCards","saves","offsides","accuratePasses","totalPasses","passPct","possession"]);
+  const extras = [];
+  (m.home.rawStats || []).forEach(s => {
+    if (!usedKeys.has(s.name) && s.name) {
+      const val = s.displayValue != null ? s.displayValue : s.value;
+      const aVal = (m.away.rawStats || []).find(x => x.name === s.name);
+      const aValTxt = aVal ? (aVal.displayValue != null ? aVal.displayValue : aVal.value) : "—";
+      extras.push([s.name, val, aValTxt]);
+    }
+  });
+
+  let html = "";
+  sections.forEach(sec => {
+    html += `<div class="stats-section"><h4>${sec.title}</h4>`;
+    html += sec.rows.map(([l, h, a]) => `
+      <div class="stat-row"><span class="label">${l}</span>
+        <span class="val"><b style="color:var(--accent)">${esc(h)}</b> — <b style="color:var(--accent2)">${esc(a)}</b></span>
+      </div>`).join("");
+    html += `</div>`;
+  });
+  if (extras.length) {
+    html += `<div class="stats-section"><h4>📊 إحصائيات إضافية من ESPN</h4>`;
+    html += extras.map(([l, h, a]) => `
+      <div class="stat-row"><span class="label">${esc(l)}</span>
+        <span class="val"><b style="color:var(--accent)">${esc(h)}</b> — <b style="color:var(--accent2)">${esc(a)}</b></span>
+      </div>`).join("");
+    html += `</div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderLineupsTab(el, m) {
+  const rosters = m.rosters || [];
+  if (!rosters.length) { el.innerHTML = '<div class="empty">لا توجد تشكيلات</div>'; return; }
+  el.innerHTML = rosters.map(r => {
+    const tn = r.team && (r.team.displayName || r.team.name) || "?";
+    const ps = (r.roster || []).map(p =>
+      `<div class="stat-row"><span class="label">${esc(p.jersey || "")} ${esc(p.athlete && p.athlete.displayName || "?")}</span>
+      <span class="val" style="color:var(--muted);font-size:.7rem">${esc(p.position && p.position.abbreviation || "")}</span></div>`).join("");
+    return `<div class="ai-panel"><div class="ai-title">👥 ${esc(tn)}</div>${ps || '<div class="empty">لم يُعلن</div>'}</div>`;
+  }).join("");
+}
+
+function renderEventsTab(el, m) {
+  const ev = m.events || [];
+  if (!ev.length) { el.innerHTML = '<div class="empty">لا توجد أحداث</div>'; return; }
+  el.innerHTML = ev.map(e => renderEventRow(e)).join("");
+}
+
+function renderEventRow(e) {
+  const tm = {
+    goal: { i: "⚽", c: "goal", l: "هدف" },
+    yellow: { i: "🟨", c: "card-y", l: "بطاقة صفراء" },
+    red: { i: "🟥", c: "card-r", l: "طرد" },
+    sub: { i: "🔄", c: "", l: "تبديل" },
+    shot: { i: "🎯", c: "shot", l: "تسديدة" },
+    "shot-on-target": { i: "🎯", c: "shot", l: "تسديدة على المرمى" },
+    foul: { i: "⚠️", c: "foul", l: "خطأ" },
+    corner: { i: "🚩", c: "corner", l: "ركنية" },
+    offside: { i: "🚫", c: "info", l: "تسلل" },
+    save: { i: "🧤", c: "shot", l: "تصدّي" },
+    info: { i: "ℹ️", c: "info", l: "" }
+  };
+  const t = tm[e.type] || tm.info;
+  const pl = e.player ? ` — ${esc(e.player)}` : "";
+  const tt = e.team ? ` <span style="color:var(--muted);font-size:.72rem">(${esc(e.team)})</span>` : "";
+  const ex = e.text && e.type === "info" ? esc(e.text.substring(0, 150)) : "";
+  return `<div class="sim-event ${t.c}"><span class="min">${e.minute}'</span><span>${t.i}</span>
+    <span>${t.l}${pl}${tt}${ex ? ` <span style="color:var(--muted);font-size:.72rem">${ex}</span>` : ""}</span></div>`;
+}
+
+function renderH2HTab(el, m) {
+  const h2h = m.headToHead;
+  if (!h2h || !(h2h.events || h2h).length) { el.innerHTML = '<div class="empty">غير متوفر</div>'; return; }
+  const events = h2h.events || h2h;
+  let hw = 0, aw = 0, dr = 0;
+  events.slice(0, 10).forEach(g => {
+    const c = (g.competitions && g.competitions[0]) || {};
+    const comps = c.competitors || [];
+    const h = comps.find(x => x.homeAway === "home");
+    const a = comps.find(x => x.homeAway === "away");
+    if (!h || !a) return;
+    const hs = parseInt(h.score) || 0, as = parseInt(a.score) || 0;
+    if (hs > as) hw++; else if (hs < as) aw++; else dr++;
+  });
+  const tot = Math.max(1, hw + aw + dr);
+  el.innerHTML = `
+    <div class="bar-row"><div class="bar-label"><span>${esc(m.home.short)}</span><span>${hw}</span></div>
+      <div class="bar-bg"><div class="bar-home" style="width:${(hw / tot) * 100}%"></div></div></div>
+    <div class="bar-row"><div class="bar-label"><span>تعادل</span><span>${dr}</span></div>
+      <div class="bar-bg"><div class="bar-home" style="width:${(dr / tot) * 100}%;background:var(--warn)"></div></div></div>
+    <div class="bar-row"><div class="bar-label"><span>${esc(m.away.short)}</span><span>${aw}</span></div>
+      <div class="bar-bg"><div class="bar-away" style="width:${(aw / tot) * 100}%"></div></div></div>`;
+}
+
+function renderBettingTab(el, m) {
+  const p = m.analysis.prediction;
+  const H = m.analysis.homeData, A = m.analysis.awayData;
+  el.innerHTML = `
+    <div class="ai-panel">
+      <div class="ai-title">📊 توقعات محركنا</div>
+      <div class="bar-row"><div class="bar-label"><span>${esc(H.name)}</span><span>${p.homeProb}%</span></div>
+        <div class="bar-bg"><div class="bar-home" style="width:${p.homeProb}%"></div></div></div>
+      <div class="bar-row"><div class="bar-label"><span>تعادل</span><span>${p.drawProb}%</span></div>
+        <div class="bar-bg"><div class="bar-home" style="width:${p.drawProb}%;background:var(--warn)"></div></div></div>
+      <div class="bar-row"><div class="bar-label"><span>${esc(A.name)}</span><span>${p.awayProb}%</span></div>
+        <div class="bar-bg"><div class="bar-away" style="width:${p.awayProb}%"></div></div></div>
+      <div style="margin-top:12px">
+        <div class="stat-row"><span class="label">الفائز المتوقع</span><span class="val">${p.winner === 'home' ? esc(H.name) : p.winner === 'away' ? esc(A.name) : 'تعادل'}</span></div>
+        <div class="stat-row"><span class="label">النتيجة المتوقعة</span><span class="val">${p.expectedScore}</span></div>
+      </div>
+    </div>`;
+}
+
+/* ==========================================================
+   ⚽ Event Extraction
+   ========================================================== */
+function parseEvent(e) {
+  const cs = (e.clock && (e.clock.displayValue || e.clock.value)) || (e.time && e.time.displayValue) || "";
+  const minute = parseInt(cs) || 0;
+  if (!minute) return null;
+  const tt = (e.type && (e.type.text || e.type.id || e.type.name)) || "";
+  const text = e.text || e.detail || "";
+  const comb = (tt + " " + text).toLowerCase();
+
+  let type = null;
+  if (/\bgoal\b/i.test(tt) || /\bgoal!\b/i.test(text) || e.scoringPlay === true || (e.type && e.type.id === "90")) type = "goal";
+  else if (/yellow card/i.test(comb) || (e.type && /yellow/i.test(tt))) type = "yellow";
+  else if (/red card/i.test(comb) || (e.type && /red/i.test(tt))) type = "red";
+  else if (/substitution/i.test(comb) || (e.type && /sub/i.test(tt))) type = "sub";
+  else if (/shot on target/i.test(comb)) type = "shot-on-target";
+  else if (/shot|attempt/i.test(comb)) type = "shot";
+  else if (/foul|free kick|freekick/i.test(comb)) type = "foul";
+  else if (/corner/i.test(comb)) type = "corner";
+  else if (/offside/i.test(comb)) type = "offside";
+  else if (/save/i.test(comb)) type = "save";
+  else if (text && text.length > 3) type = "info";
+  if (!type) return null;
+
+  let player = "";
+  const parts = e.participants || e.athletesInvolved || [];
+  if (Array.isArray(parts) && parts.length) {
+    player = parts.map(p => (p.athlete && (p.athlete.displayName || p.athlete.shortName)) || p.displayName || p.shortName || "").filter(Boolean).join(" / ");
+  }
+  let team = "";
+  if (e.team) team = e.team.displayName || e.team.shortDisplayName || e.team.name || "";
+
+  return { minute, type, text, player, team };
+}
+
+function extractMatchEvents(raw) {
+  if (!raw) return [];
+  const sources = [raw.keyEvents || [], raw.commentary || [], raw.plays || []];
+  const candidates = [];
+  sources.forEach(src => {
+    if (!Array.isArray(src)) return;
+    src.forEach(e => { const p = parseEvent(e); if (p) candidates.push(p); });
+  });
+  candidates.sort((a, b) => a.minute - b.minute);
+  const merged = [];
+  const seen = new Set();
+  candidates.forEach(ev => {
+    const key = `${ev.minute}-${ev.type}-${ev.player || ""}`;
+    if (seen.has(key)) return;
+    let found = false;
+    for (let i = merged.length - 1; i >= Math.max(0, merged.length - 4); i--) {
+      const p = merged[i];
+      if (p.minute !== ev.minute || p.type !== ev.type) continue;
+      if (p.player && ev.player && p.player !== ev.player) continue;
+      if (!p.player && ev.player) p.player = ev.player;
+      if (!p.team && ev.team) p.team = ev.team;
+      if (!p.text && ev.text) p.text = ev.text;
+      seen.add(key); found = true; break;
+    }
+    if (!found) { merged.push({ ...ev }); seen.add(key); }
+  });
+  return merged;
+}
+
+function guessSide(event, m) {
+  const t = (event.team || "").toLowerCase();
+  const h = (m.home.name || "").toLowerCase();
+  const aw = (m.away.name || "").toLowerCase();
+  if (!t) return "home";
+  if (h.includes(t) || t.includes(h)) return "home";
+  if (aw.includes(t) || t.includes(aw)) return "away";
+  const hw = h.split(" ")[0], aw2 = aw.split(" ")[0];
+  if (t.includes(hw)) return "home";
+  if (t.includes(aw2)) return "away";
+  return "home";
+}
+
+/* ==========================================================
+   ⚽ SIMULATOR V13 (نفس V12)
+   ========================================================== */
+
+let simState = null;
+
+function openSimulator() {
+  if (!currentMatch || !currentMatch.analysis) { showToast("⚠️ لا توجد بيانات", "error"); return; }
+  document.getElementById("simulator-card").classList.remove("hidden");
+  startSimulation();
+  document.getElementById("simulator-card").scrollIntoView({ behavior: "smooth" });
+}
+
+async function startSimulation() {
+  if (simState && simState.timer) clearTimeout(simState.timer);
+  simPaused = false;
+
+  const m = currentMatch;
+  const a = m.analysis;
+  const realEvents = m.events || extractMatchEvents(m.rawData);
+  const currentRealMinute = a.type === "in" ? Math.max(0, Math.min(90, a.minute)) :
+                            a.type === "post" ? 90 : 0;
+
+  let mode;
+  if (a.type === "pre") mode = "predict-only";
+  else if (a.type === "post") mode = "replay-only";
+  else mode = "replay-then-predict";
+
+  let hS = 0, aS = 0;
+  const homeName = a.homeData.name;
+  const awayName = a.awayData.name;
+  const baseHomeStrength = a.homeData.strength;
+  const baseAwayStrength = a.awayData.strength;
+
+  const el = document.getElementById("simulator-content");
+  el.innerHTML = `
+    <div style="text-align:center;margin-bottom:12px;">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px;">
+        ${mode === "predict-only" ? "🔮 توقع كامل" :
+          mode === "replay-only" ? "🔄 إعادة كاملة" : "🔄 إعادة حقيقية ← 🔮 محاكاة منطقية"}
+      </div>
+      <div style="font-size:1.1rem;font-weight:700;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span>${esc(homeName)}</span>
+        <span style="color:var(--accent);font-size:1.4rem" id="sim-hs">0</span>
+        <span style="color:var(--muted)">-</span>
+        <span style="color:var(--accent2);font-size:1.4rem" id="sim-as">0</span>
+        <span>${esc(awayName)}</span>
+      </div>
+      <div style="margin-top:8px">
+        <div class="bar-bg" style="height:6px">
+          <div id="sim-progress" style="background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;width:0%;transition:width .2s"></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px" id="sim-min">⏱️ الدقيقة 0</div>
+        <div style="font-size:.72rem;margin-top:4px" id="sim-phase"></div>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <button class="btn btn-secondary" onclick="toggleSimPause()" id="sim-pause-btn">⏸️ إيقاف</button>
+      <button class="btn btn-secondary" onclick="changeSpeed(900)" id="sp-1">🐢</button>
+      <button class="btn btn-primary" onclick="changeSpeed(500)" id="sp-2">▶️ عادي</button>
+      <button class="btn btn-secondary" onclick="changeSpeed(200)" id="sp-3">⚡ سريع</button>
+      <button class="btn btn-danger" onclick="startSimulation()">🔄 إعادة</button>
+    </div>
+    <div id="sim-status" style="background:rgba(59,130,246,.1);border:1px solid var(--accent2);border-radius:8px;padding:10px 12px;font-size:.78rem;color:#d0defc;margin-bottom:8px;min-height:48px;text-align:center;">
+      جاهز...
+    </div>
+    <div id="sim-events" style="max-height:380px;overflow-y:auto;padding:4px 0"></div>
+    <div id="sim-final" style="text-align:center;margin-top:10px;font-size:.95rem"></div>
+  `;
+
+  const eEl = document.getElementById("sim-events");
+  const minEl = document.getElementById("sim-min");
+  const progEl = document.getElementById("sim-progress");
+  const phaseEl = document.getElementById("sim-phase");
+  const finalEl = document.getElementById("sim-final");
+  const hsEl = document.getElementById("sim-hs");
+  const asEl = document.getElementById("sim-as");
+  const statEl = document.getElementById("sim-status");
+
+  let minute = 0;
+  let hC = 0, aC = 0, hY = 0, aY = 0, hR = 0, aR = 0;
+  const subsMade = { home: 0, away: 0 };
+  const processedIdx = new Set();
+  let done = false;
+  let momentum = { home: 0, away: 0 };
+
+  function addEvent(mn, icon, mainTxt, reason, factors, cls = "") {
+    const d = document.createElement("div");
+    d.className = "sim-event " + cls;
+    let html = `<span class="min">${mn}'</span><span>${icon}</span><div class="body"><div>${mainTxt}</div>`;
+    if (reason) html += `<div class="reason">💬 ${esc(reason)}</div>`;
+    if (factors && factors.length) {
+      html += `<div class="factors">${factors.map(f => `<div>• ${esc(f)}</div>`).join("")}</div>`;
+    }
+    html += `</div>`;
+    d.innerHTML = html;
+    eEl.prepend(d);
+  }
+  function setPhase(txt, color) { phaseEl.innerHTML = `<span style="color:${color}">${txt}</span>`; }
+  function setStatus(txt, color = "var(--accent2)") { statEl.innerHTML = `<span style="color:${color}">▸</span> ${txt}`; }
+
+  function decideEvent() {
+    const H = a.homeData, A = a.awayData;
+    let hPow = baseHomeStrength, aPow = baseAwayStrength;
+    const diff = hS - aS;
+    if (diff < 0) hPow *= 1.15;
+    if (diff > 0) aPow *= 1.15;
+    hPow += momentum.home * 3;
+    aPow += momentum.away * 3;
+    if (hR > 0) { hPow *= 0.65; aPow *= 1.35; }
+    if (aR > 0) { aPow *= 0.65; hPow *= 1.35; }
+    if (minute > 80 && Math.abs(diff) <= 1) {
+      if (diff <= 0) hPow *= 1.1;
+      if (diff >= 0) aPow *= 1.1;
+    }
+    const totalPow = hPow + aPow;
+    const hShare = hPow / totalPow;
+    const r = Math.random();
+
+    if (r < 0.55) { momentum.home *= 0.85; momentum.away *= 0.85; return null; }
+    if (r < 0.75) {
+      const homeFavors = Math.random() < hShare;
+      const types = ["shot", "corner", "foul", "shot-on-target", "save"];
+      const weights = [0.35, 0.25, 0.20, 0.10, 0.10];
+      let r2 = Math.random(), acc = 0, type = "shot";
+      for (let i = 0; i < types.length; i++) { acc += weights[i]; if (r2 < acc) { type = types[i]; break; } }
+      return { event: type, side: homeFavors ? "home" : "away", big: false };
+    }
+    if (r < 0.90) {
+      const homeFavors = Math.random() < hShare;
+      const strengthDiff = Math.abs(hPow - aPow);
+      const goalP = Math.min(0.7, 0.35 + strengthDiff * 0.001);
+      if (Math.random() < goalP) return { event: "goal", side: homeFavors ? "home" : "away", big: true };
+      momentum.home *= 0.85; momentum.away *= 0.85;
+      return null;
+    }
+    if (r < 0.95) {
+      const side = Math.random() < 0.5 ? "home" : "away";
+      const yc = side === "home" ? hY : aY;
+      if (yc < 5) return { event: "yellow", side, big: false };
+      return null;
+    }
+    if (minute >= 50 && minute <= 85) {
+      const side = subsMade.home <= subsMade.away ? "home" : "away";
+      if (subsMade[side] < 5) return { event: "sub", side, big: false };
+    }
+    return null;
+  }
+
+  function buildFactors(dec) {
+    const H = a.homeData, A = a.awayData;
+    const factors = [];
+    const team = dec.side === "home" ? homeName : awayName;
+    const opp = dec.side === "home" ? awayName : homeName;
+    if (dec.side === "home" && baseHomeStrength > baseAwayStrength + 10)
+      factors.push(`${team} أقوى بـ ${(baseHomeStrength - baseAwayStrength).toFixed(0)} نقطة`);
+    else if (dec.side === "away" && baseAwayStrength > baseHomeStrength + 10)
+      factors.push(`${team} أقوى بـ ${(baseAwayStrength - baseHomeStrength).toFixed(0)} نقطة`);
+    const diff = hS - aS;
+    if (diff < 0 && dec.side === "home") factors.push(`${team} يبحث عن التعادل`);
+    if (diff > 0 && dec.side === "away") factors.push(`${team} يبحث عن التعادل`);
+    if (diff > 1 && dec.side === "home") factors.push(`${team} يحتاج لتقليص الفارق`);
+    if (dec.side === "home" && momentum.home > 0.3) factors.push(`زخم قوي لصالح ${team}`);
+    if (dec.side === "away" && momentum.away > 0.3) factors.push(`زخم قوي لصالح ${team}`);
+    if (dec.side === "home" && aR > 0) factors.push(`${opp} بـ 10 لاعبين — فرصة ذهبية`);
+    if (dec.side === "away" && hR > 0) factors.push(`${opp} بـ 10 لاعبين — فرصة ذهبية`);
+    if (minute > 80) factors.push(`الدقائق الأخيرة — ضغط عالي`);
+    const pos = dec.side === "home" ? H.possession : A.possession;
+    if (pos > 55) factors.push(`${team} يسيطر على الكرة (${pos}%)`);
+    const shots = dec.side === "home" ? H.shots : A.shots;
+    if (shots > 10) factors.push(`${team} لديه ${shots} تسديدة`);
+    return factors;
+  }
+
+  function getReason(dec) {
+    const team = dec.side === "home" ? homeName : awayName;
+    const reasons = {
+      goal: [`${team} يستغل ثغرة دفاعية`, `${team} يسجل من هجمة منظمة`, `${team} يستفيد من خطأ دفاعي`, `${team} يسجل من ركنية`],
+      shot: [`${team} يحاول من بعيد`, `${team} يختبر الحارس`, `${team} يضغط بهجمة سريعة`],
+      "shot-on-target": [`${team} يسدد على المرمى`, `${team} يهدد المرمى بجدية`],
+      corner: [`${team} يحصل على ركنية`, `${team} يضغط ويربح ركنية`],
+      foul: [`${team} يرتكب خطأ`, `خطأ من ${team} لوقف الهجمة`],
+      yellow: [`بطاقة صفراء لـ ${team}`, `${team} يحصل على إنذار`],
+      red: [`طرد! ${team} بـ 10 لاعبين`, `قرار قاسٍ ضد ${team}`],
+      sub: [`${team} يجري تبديلاً تكتيكياً`],
+      save: [`حارس ${team} يتصدى ببراعة`]
+    };
+    const arr = reasons[dec.event] || [`${team} يتحرك`];
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  async function tick() {
+    if (done) return;
+    if (simPaused) { simState.timer = setTimeout(tick, simSpeed); return; }
+
+    if (minute >= 95) {
+      done = true;
+      addEvent(90 + Math.floor(Math.random() * 4) + 1, "🏁", "نهاية المباراة", null, null, "");
+      finalEl.innerHTML = `
+        <div style="color:var(--accent);font-weight:800;font-size:1.1rem;margin-bottom:6px">🏁 النتيجة النهائية</div>
+        <div style="font-size:1rem">
+          ${esc(homeName)} <b style="color:var(--accent);font-size:1.3rem">${hS}</b>
+          - <b style="color:var(--accent2);font-size:1.3rem">${aS}</b> ${esc(awayName)}
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:6px">
+          🚩 ${hC}-${aC} | 🟨 ${hY}-${aY}${hR + aR > 0 ? ` | 🟥 ${hR}-${aR}` : ""}
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ai" onclick="startSimulation()">🔄 إعادة المحاكاة</button>
+        </div>`;
+      return;
+    }
+
+    minute++;
+
+    if ((mode === "replay-then-predict" || mode === "replay-only") && minute <= currentRealMinute) {
+      setPhase(`🔄 إعادة حقيقية (0→${currentRealMinute})`, "var(--accent)");
+      const evMin = [];
+      realEvents.forEach((e, idx) => {
+        if (e.minute === minute && !processedIdx.has(idx)) { processedIdx.add(idx); evMin.push(e); }
+      });
+      evMin.forEach(e => {
+        const correctSide = (e.team && m.home.name.toLowerCase().includes(e.team.toLowerCase())) ? "home" :
+                            (e.team && m.away.name.toLowerCase().includes(e.team.toLowerCase())) ? "away" :
+                            guessSide(e, m);
+        const fName = correctSide === "home" ? homeName : awayName;
+        if (e.type === "goal") {
+          if (correctSide === "home") hS++; else aS++;
+          hsEl.textContent = hS; asEl.textContent = aS;
+          addEvent(minute, "⚽", `هدف لـ ${esc(fName)}${e.player ? ` — ${esc(e.player)}` : ""}`, null, null, "goal");
+        } else if (e.type === "yellow") {
+          if (correctSide === "home") hY++; else aY++;
+          addEvent(minute, "🟨", `بطاقة صفراء${e.player ? ` — ${esc(e.player)}` : ""}`, null, null, "card-y");
+        } else if (e.type === "red") {
+          if (correctSide === "home") hR++; else aR++;
+          addEvent(minute, "🟥", `طرد!${e.player ? ` — ${esc(e.player)}` : ""}`, `${fName} يكمل بـ 10 لاعبين`, [`خصم ${fName} سيستفيد`], "card-r");
+        } else if (e.type === "sub") {
+          subsMade[correctSide]++;
+          addEvent(minute, "🔄", `تبديل${e.player ? ` — ${esc(e.player)}` : ""}`, null, null, "");
+        } else if (e.type === "shot-on-target" || e.type === "shot")
+          addEvent(minute, "🎯", `تسديدة${e.player ? ` — ${esc(e.player)}` : ""}`, null, null, "shot");
+        else if (e.type === "foul")
+          addEvent(minute, "⚠️", `خطأ${e.player ? ` — ${esc(e.player)}` : ""}`, null, null, "foul");
+        else if (e.type === "corner") {
+          if (correctSide === "home") hC++; else aC++;
+          addEvent(minute, "🚩", `ركنية — ${esc(fName)}`, null, null, "corner");
+        } else if (e.type === "save")
+          addEvent(minute, "🧤", `تصدّي${e.player ? ` — ${esc(e.player)}` : ""}`, null, null, "shot");
+        else if (e.type === "offside")
+          addEvent(minute, "🚫", `تسلل — ${esc(fName)}`, null, null, "info");
+        else if (e.type === "info" && e.text)
+          addEvent(minute, "ℹ️", esc(e.text.substring(0, 100)), null, null, "info");
+      });
+
+      if (minute === currentRealMinute && mode === "replay-then-predict") {
+        hS = m.home.score; aS = m.away.score;
+        hsEl.textContent = hS; asEl.textContent = aS;
+      }
+    } else {
+      setPhase(`🔮 محاكاة منطقية (${minute}→95)`, "var(--accent2)");
+      const dec = decideEvent();
+      if (dec) {
+        const tName = dec.side === "home" ? homeName : awayName;
+        const reason = getReason(dec);
+        const factors = buildFactors(dec);
+        if (dec.event === "goal") {
+          if (dec.side === "home") hS++; else aS++;
+          hsEl.textContent = hS; asEl.textContent = aS;
+          addEvent(minute, "⚽", `🎯 هدف لـ ${esc(tName)}!`, reason, factors, "goal");
+          momentum[dec.side] = 1;
+          momentum[dec.side === "home" ? "away" : "home"] = -0.5;
+          setStatus(`⚽ هدف لـ ${esc(tName)} — ${reason}`, "var(--accent)");
+        } else if (dec.event === "yellow") {
+          if (dec.side === "home") hY++; else aY++;
+          addEvent(minute, "🟨", `بطاقة صفراء — ${esc(tName)}`, reason, factors, "card-y");
+          momentum[dec.side] = -0.3;
+        } else if (dec.event === "red") {
+          if (dec.side === "home") hR++; else aR++;
+          addEvent(minute, "🟥", `🚨 طرد! — ${esc(tName)}`, reason, factors, "card-r");
+          momentum[dec.side] = -1;
+          momentum[dec.side === "home" ? "away" : "home"] = 1;
+          setStatus(`🟥 طرد! ${esc(tName)} بـ 10 لاعبين — الموازين تتغير`, "var(--danger)");
+        } else if (dec.event === "sub") {
+          if (subsMade[dec.side] < 5) subsMade[dec.side]++;
+          addEvent(minute, "🔄", `تبديل — ${esc(tName)}`, reason, factors, "");
+        } else if (dec.event === "corner") {
+          if (dec.side === "home") hC++; else aC++;
+          addEvent(minute, "🚩", `ركنية — ${esc(tName)}`, reason, factors, "corner");
+          momentum[dec.side] += 0.2;
+        } else if (dec.event === "shot-on-target") {
+          addEvent(minute, "🎯", `تسديدة على المرمى — ${esc(tName)}`, reason, factors, "shot");
+          momentum[dec.side] += 0.2;
+        } else if (dec.event === "shot") {
+          addEvent(minute, "🎯", `تسديدة — ${esc(tName)}`, reason, factors, "shot");
+          momentum[dec.side] += 0.1;
+        } else if (dec.event === "foul") {
+          addEvent(minute, "⚠️", `خطأ — ${esc(tName)}`, reason, factors, "foul");
+          momentum[dec.side] -= 0.15;
+        } else if (dec.event === "save") {
+          addEvent(minute, "🧤", `تصدّي — ${esc(tName)}`, reason, factors, "shot");
+        }
+      } else {
+        momentum.home *= 0.9;
+        momentum.away *= 0.9;
+        if (minute % 5 === 0) setStatus(`📊 الدقيقة ${minute} — اللعب مستمر (${hS}-${aS})`, "var(--muted)");
+      }
+    }
+
+    minEl.textContent = `⏱️ الدقيقة ${minute}`;
+    progEl.style.width = Math.min(100, (minute / 95) * 100) + "%";
+    if (!done) simState.timer = setTimeout(tick, simSpeed);
+  }
+
+  simState = { timer: null, mode };
+  tick();
+}
+
+function toggleSimPause() {
+  simPaused = !simPaused;
+  document.getElementById("sim-pause-btn").textContent = simPaused ? "▶️ استئناف" : "⏸️ إيقاف";
+}
+
+function changeSpeed(ms) {
+  simSpeed = ms;
+  ["sp-1","sp-2","sp-3"].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) { b.classList.remove("btn-primary"); b.classList.add("btn-secondary"); }
+  });
+  const active = ms === 900 ? "sp-1" : ms === 500 ? "sp-2" : "sp-3";
+  const a = document.getElementById(active);
+  if (a) { a.classList.remove("btn-secondary"); a.classList.add("btn-primary"); }
+}
+
+/* ===== Team Search ===== */
+async function searchTeam() {
+  const q = document.getElementById("team-search").value.trim();
+  if (q.length < 3) { showToast("3 أحرف على الأقل", "warn"); return; }
+  const el = document.getElementById("team-results");
+  el.innerHTML = '<div class="empty"><span class="loading-spinner"></span> بحث...</div>';
+  try {
+    const url = `https://site.web.api.espn.com/apis/common/v3/search?query=${encodeURIComponent(q)}&limit=15&type=team&sport=soccer`;
+    const data = await fetchJSON(url);
+    const results = (data.results || []).map(r => r.contents || []).flat();
+    if (!results.length) { el.innerHTML = '<div class="empty">لا نتائج</div>'; return; }
+    el.innerHTML = results.slice(0, 10).map(r => {
+      const item = r.item || r;
+      const tid = item.id || (item.uid && item.uid.split('~').pop());
+      const name = item.displayName || item.name || "?";
+      const logo = item.logos && item.logos[0] && item.logos[0].href || "";
+      return `<div class="match-item" onclick="loadTeamSchedule('${esc(tid)}', '${esc(name)}')">
+        <div class="match-teams">
+          <div class="team"><img class="logo" src="${esc(logo)}" onerror="this.style.display='none'"> ${esc(name)}</div>
+        </div>
+        <div style="font-size:.78rem;color:var(--accent2)">المباريات ←</div>
+      </div>`;
+    }).join("");
+  } catch (e) { el.innerHTML = `<div class="empty">⚠️ ${esc(e.message)}</div>`; }
+}
+
+async function loadTeamSchedule(teamId, name) {
+  const el = document.getElementById("team-results");
+  el.innerHTML = `<div class="empty"><span class="loading-spinner"></span> جلب مباريات ${esc(name)}...</div>`;
+  const tryLeagues = [currentLeague, "eng.1", "esp.1", "ita.1", "ger.1", "fra.1"];
+  for (const lg of tryLeagues) {
+    try {
+      const data = await fetchJSON(`${ESPN_BASE}/${lg}/teams/${teamId}/schedule`, 8000);
+      const events = data.events || [];
+      if (events.length) {
+        el.innerHTML = events.slice(-15).reverse().map(m => renderMatchItem(m)).join("");
+        return;
+      }
+    } catch (e) { continue; }
+  }
+  el.innerHTML = '<div class="empty">لا توجد مباريات</div>';
+}
+
+/* ===== Start ===== */
+init();
+</script>
+</body>
+</html>
